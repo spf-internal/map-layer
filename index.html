@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Singapore Police NPC Boundaries (Google Maps)</title>
+  <title>Singapore Police NPC Boundaries</title>
   <meta charset="utf-8" />
   <style>
     body { margin: 0; }
     #map { height: 100vh; width: 100%; }
+
+    /* Control panel */
+    .control-box {
+      background: white;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .legend-box div {
+      margin-bottom: 5px;
+    }
+
+    .color-box {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      background: #0047AB;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
   </style>
 </head>
 
@@ -15,35 +38,32 @@
   <script>
     async function initMap() {
 
-      // 1. Initialise Google Map
+      // 1. Create map
       const map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 1.3521, lng: 103.8198 },
-        zoom: 11,
-        mapTypeId: "roadmap"
+        zoom: 11
       });
 
       const datasetId = "d_89b44df21fccc4f51390eaff16aa1fe8";
       const pollUrl = `https://api-open.data.gov.sg/v1/public/api/datasets/${datasetId}/poll-download`;
 
-      try {
-        // 2. Call poll-download
-        let response = await fetch(pollUrl);
-        if (!response.ok) throw new Error("Poll-download failed");
+      const labelMarkers = [];
+      const bounds = new google.maps.LatLngBounds();
 
+      try {
+        // 2. Poll download
+        let response = await fetch(pollUrl);
         const pollData = await response.json();
         if (pollData.code !== 0) throw new Error(pollData.errMsg);
 
-        // 3. Fetch actual GeoJSON file
-        const geoJsonUrl = pollData.data.url;
-        response = await fetch(geoJsonUrl);
-        if (!response.ok) throw new Error("GeoJSON fetch failed");
-
+        // 3. Fetch GeoJSON
+        response = await fetch(pollData.data.url);
         const geoJson = await response.json();
 
-        // 4. Add GeoJSON to Google Maps
+        // 4. Add NPC polygons
         map.data.addGeoJson(geoJson);
 
-        // 5. Style NPC boundaries
+        // 5. Style polygons
         map.data.setStyle({
           fillColor: "#0047AB",
           fillOpacity: 0.25,
@@ -51,7 +71,7 @@
           strokeWeight: 2
         });
 
-        // 6. Info window on click
+        // 6. Info window
         const infoWindow = new google.maps.InfoWindow();
 
         map.data.addListener("click", (event) => {
@@ -65,13 +85,86 @@
           infoWindow.open(map);
         });
 
-      } catch (error) {
-        console.error("Error loading NPC data:", error);
+        // 7. Create labels + bounds
+        map.data.forEach(feature => {
+          const geometry = feature.getGeometry();
+          let coords = [];
+
+          geometry.forEachLatLng(latlng => {
+            coords.push(latlng);
+            bounds.extend(latlng);
+          });
+
+          // Compute centroid
+          let latSum = 0, lngSum = 0;
+          coords.forEach(c => {
+            latSum += c.lat();
+            lngSum += c.lng();
+          });
+
+          const center = {
+            lat: latSum / coords.length,
+            lng: lngSum / coords.length
+          };
+
+          const name =
+            feature.getProperty("name") ||
+            feature.getProperty("npc_name") ||
+            "";
+
+          // Label marker
+          const marker = new google.maps.Marker({
+            position: center,
+            map: map,
+            label: {
+              text: name,
+              fontSize: "12px",
+              fontWeight: "bold"
+            },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 0 // invisible marker
+            }
+          });
+
+          labelMarkers.push(marker);
+        });
+
+        // 8. Auto-fit map
+        map.fitBounds(bounds);
+
+      } catch (err) {
+        console.error("NPC loading error:", err);
       }
+
+      // 🔘 Toggle control
+      const toggleDiv = document.createElement("div");
+      toggleDiv.className = "control-box";
+      toggleDiv.innerHTML = `
+        <label>
+          <input type="checkbox" checked id="toggleNpc">
+          Show NPC Boundaries
+        </label>
+      `;
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(toggleDiv);
+
+      document.getElementById("toggleNpc").addEventListener("change", (e) => {
+        map.data.setMap(e.target.checked ? map : null);
+        labelMarkers.forEach(m => m.setMap(e.target.checked ? map : null));
+      });
+
+      // 🧭 Legend
+      const legendDiv = document.createElement("div");
+      legendDiv.className = "control-box legend-box";
+      legendDiv.innerHTML = `
+        <div><b>Legend</b></div>
+        <div><span class="color-box"></span>Neighbourhood Police Centre (NPC)</div>
+      `;
+      map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(legendDiv);
     }
   </script>
 
-  <!-- Google Maps JS API -->
+  <!-- Google Maps API -->
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap"
     async defer>
