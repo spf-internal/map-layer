@@ -42,8 +42,8 @@ function initMap() {
   const GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev";
   map.data.loadGeoJson(GEOJSON_PROXY_URL);
   map.data.addListener("addfeature", e => {
-    if (!e.features.getProperty("NPC_NAME")) {
-      map.data.remove(e.features);
+    if (!e.feature.getProperty("NPC_NAME")) {
+      map.data.remove(e.feature);
     }
   });
   
@@ -58,11 +58,11 @@ function initMap() {
   // 3. Fit map to NPC bounds
   const bounds = new google.maps.LatLngBounds();
   map.data.addListener("addfeature", e => {
-    collectLatLng(e.features.getGeometry(), bounds);
+    collectLatLng(e.feature.getGeometry(), bounds);
   });
 
-  // 🔑 Wait until ALL features are loaded
-  map.data.addListener("idle", () => {
+  // 🔑 Wait until ALL feature are loaded
+  map.data.addListener("addfeature", () => {
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds);
     }
@@ -73,7 +73,7 @@ function initMap() {
 
   map.data.addListener("click", event => {
     const name =
-      event.features.getProperty("NPC_NAME") ||
+      event.feature.getProperty("NPC_NAME") ||
       "NIL";
 
     infoWindow.setContent(`<b>NPC Name:</b> ${name}`);
