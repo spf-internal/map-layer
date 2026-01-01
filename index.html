@@ -104,10 +104,37 @@ function initMap() {
 
 // 🔁 Recursive geometry handler (Polygon + MultiPolygon safe)
 function collectLatLng(geometry, bounds) {
+  // Point
   if (geometry instanceof google.maps.Data.Point) {
     bounds.extend(geometry.get());
-  } else {
-    geometry.getArray().forEach(g => collectLatLng(g, bounds));
+    return;
+  }
+
+  // LineString or LinearRing
+  if (
+    geometry instanceof google.maps.Data.LineString ||
+    geometry instanceof google.maps.Data.LinearRing
+  ) {
+    geometry.getArray().forEach(latlng => bounds.extend(latlng));
+    return;
+  }
+
+  // Polygon
+  if (geometry instanceof google.maps.Data.Polygon) {
+    geometry.getArray().forEach(ring => {
+      ring.getArray().forEach(latlng => bounds.extend(latlng));
+    });
+    return;
+  }
+
+  // MultiPolygon
+  if (geometry instanceof google.maps.Data.MultiPolygon) {
+    geometry.getArray().forEach(polygon => {
+      polygon.getArray().forEach(ring => {
+        ring.getArray().forEach(latlng => bounds.extend(latlng));
+      });
+    });
+    return;
   }
 }
 </script>
