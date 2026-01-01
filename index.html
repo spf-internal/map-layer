@@ -31,97 +31,56 @@
 <div id="map"></div>
 
 <script>
-async function initMap() {
+function initMap() {
 
-  // 1. Create map
+  // 1. Initialise map
   const map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 1.3521, lng: 103.8198 },
     zoom: 11
   });
 
-  const datasetId = "d_89b44df21fccc4f51390eaff16aa1fe8";
-  const pollUrl = `https://api-open.data.gov.sg/v1/public/api/datasets/${datasetId}/poll-download`;
+  // 🔁 LOAD NPCs FROM CLOUDFLARE WORKER
+  // ⬇⬇⬇ REPLACE WITH YOUR WORKER URL ⬇⬇⬇
+  const GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev";
 
+  map.data.loadGeoJson(GEOJSON_PROXY_URL);
+
+  // 2. Style NPC polygons
+  map.data.setStyle({
+    fillColor: "#0047AB",
+    fillOpacity: 0.25,
+    strokeColor: "#0047AB",
+    strokeWeight: 2
+  });
+
+  // 3. Fit map to NPC bounds
   const bounds = new google.maps.LatLngBounds();
-  const labelMarkers = [];
 
-  try {
-    // 2. Poll-download
-    let res = await fetch(pollUrl);
-    const pollData = await res.json();
-    if (pollData.code !== 0) throw new Error(pollData.errMsg);
-
-    // 3. Fetch GeoJSON
-    res = await fetch(pollData.data.url);
-    const geoJson = await res.json();
-
-    // 4. Add GeoJSON (CRITICAL STEP)
-    map.data.addGeoJson(geoJson);
-
-    // 5. Style polygons
-    map.data.setStyle({
-      fillColor: "#0047AB",
-      fillOpacity: 0.25,
-      strokeColor: "#0047AB",
-      strokeWeight: 2
-    });
-
-    // 6. Safely extend bounds + compute centroids
-    map.data.forEach(feature => {
-      const coords = [];
-      collectLatLng(feature.getGeometry(), coords);
-
-      // Extend bounds
-      coords.forEach(c => bounds.extend(c));
-
-      // Compute centroid
-      let lat = 0, lng = 0;
-      coords.forEach(c => {
-        lat += c.lat();
-        lng += c.lng();
-      });
-
-      const center = {
-        lat: lat / coords.length,
-        lng: lng / coords.length
-      };
-
-      const name =
-        feature.getProperty("name") ||
-        feature.getProperty("npc_name") ||
-        "NPC";
-
-      // Label marker
-      const marker = new google.maps.Marker({
-        position: center,
-        map: map,
-        label: {
-          text: name,
-          fontSize: "12px",
-          fontWeight: "bold"
-        },
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 0
-        }
-      });
-
-      labelMarkers.push(marker);
-    });
-
-    // 7. Fit map to NPC boundaries
+  map.data.addListener("addfeature", e => {
+    collectLatLng(e.feature.getGeometry(), bounds);
     map.fitBounds(bounds);
+  });
 
-  } catch (err) {
-    console.error("NPC load error:", err);
-  }
+  // 4. Click popup
+  const infoWindow = new google.maps.InfoWindow();
 
-  // 🔘 Toggle
+  map.data.addListener("click", event => {
+    const name =
+      event.feature.getProperty("name") ||
+      event.feature.getProperty("npc_name") ||
+      "NPC";
+
+    infoWindow.setContent(`<b>NPC Name:</b> ${name}`);
+    infoWindow.setPosition(event.latLng);
+    infoWindow.open(map);
+  });
+
+  // 5. Toggle control
   const toggleDiv = document.createElement("div");
   toggleDiv.className = "control-box";
   toggleDiv.innerHTML = `
     <label>
-      <input type="checkbox" id="toggleNpc" checked>
+      <input type="checkbox" checked id="toggleNpc">
       Show NPC Boundaries
     </label>
   `;
@@ -129,10 +88,9 @@ async function initMap() {
 
   document.getElementById("toggleNpc").addEventListener("change", e => {
     map.data.setMap(e.target.checked ? map : null);
-    labelMarkers.forEach(m => m.setMap(e.target.checked ? map : null));
   });
 
-  // 🧭 Legend
+  // 6. Legend
   const legend = document.createElement("div");
   legend.className = "control-box";
   legend.innerHTML = `
@@ -143,20 +101,16 @@ async function initMap() {
 }
 
 // 🔁 Recursive geometry handler (Polygon + MultiPolygon safe)
-function collectLatLng(geometry, arr) {
+function collectLatLng(geometry, bounds) {
   if (geometry instanceof google.maps.Data.Point) {
-    arr.push(geometry.get());
-  } else if (geometry instanceof google.maps.Data.MultiPoint ||
-             geometry instanceof google.maps.Data.LineString ||
-             geometry instanceof google.maps.Data.LinearRing) {
-    geometry.getArray().forEach(g => collectLatLng(g, arr));
-  } else if (geometry instanceof google.maps.Data.Polygon ||
-             geometry instanceof google.maps.Data.MultiPolygon) {
-    geometry.getArray().forEach(g => collectLatLng(g, arr));
+    bounds.extend(geometry.get());
+  } else {
+    geometry.getArray().forEach(g => collectLatLng(g, bounds));
   }
 }
 </script>
 
+<!-- 🔑 Google Maps API -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap"
   async defer>
