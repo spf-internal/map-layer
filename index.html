@@ -80,13 +80,15 @@ function initMap() {
   toggleDiv.className = "control-box";
   toggleDiv.innerHTML = `
     <label>
-      <input type="checkbox" checked id="toggleNpc">
+      <input type="checkbox" checked>
       Show NPC Boundaries
     </label>
   `;
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(toggleDiv);
-
-  document.getElementById("toggleNpc").addEventListener("change", e => {
+  
+  // ✅ Attach listener correctly
+  const checkbox = toggleDiv.querySelector("input");
+  checkbox.addEventListener("change", e => {
     map.data.setMap(e.target.checked ? map : null);
   });
 
