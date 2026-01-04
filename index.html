@@ -93,15 +93,33 @@ function initMap() {
   });
 
   estLayer.addListener("click", e => {
+    const props = e.feature;
+    
     infoWindow.setContent(`
-      <b>Establishment</b><br>
-      ${e.feature.getProperty("establishment") || "NIL"}<br>
-      ${e.feature.getProperty("address") || ""}
+      <div style="max-height: 250px; overflow-y: auto; font-size: 13px;">
+        <b>Establishment Info</b><br>
+        <table style="border-collapse: collapse; width: 100%;">
+          // <tr><td><b>OBJECTID_1</b></td><td>${props.getProperty("OBJECTID_1") || "NIL"}</td></tr>
+          <tr><td><b>DEPARTMENT</b></td><td>${props.getProperty("DEPARTMENT") || "NIL"}</td></tr>
+          <tr><td><b>TYPE</b></td><td>${props.getProperty("TYPE") || "NIL"}</td></tr>
+          <tr><td><b>OPERATING_HOURS</b></td><td>${props.getProperty("OPERATING_HOURS") || "NIL"}</td></tr>
+          <tr><td><b>TELEPHONE</b></td><td>${props.getProperty("TELEPHONE") || "NIL"}</td></tr>
+          <tr><td><b>ALT_TELEPHONE_LINE</b></td><td>${props.getProperty("ALT_TELEPHONE_LINE") || "NIL"}</td></tr>
+          <tr><td><b>BUILDING_NAME</b></td><td>${props.getProperty("BUILDING_NAME") || "NIL"}</td></tr>
+          <tr><td><b>HSE_BLK_NO</b></td><td>${props.getProperty("HSE_BLK_NO") || "NIL"}</td></tr>
+          <tr><td><b>UNIT</b></td><td>${props.getProperty("UNIT") || "NIL"}</td></tr>
+          <tr><td><b>STREET_NAME</b></td><td>${props.getProperty("STREET_NAME") || "NIL"}</td></tr>
+          <tr><td><b>POSTAL_CODE</b></td><td>${props.getProperty("POSTAL_CODE") || "NIL"}</td></tr>
+          <tr><td><b>FAX</b></td><td>${props.getProperty("FAX") || "NIL"}</td></tr>
+          <tr><td><b>INC_CRC</b></td><td>${props.getProperty("INC_CRC") || "NIL"}</td></tr>
+          <tr><td><b>FMEL_UPD_D</b></td><td>${props.getProperty("FMEL_UPD_D") || "NIL"}</td></tr>
+        </table>
+      </div>
     `);
     infoWindow.setPosition(e.latLng);
     infoWindow.open(map);
   });
-
+  
   // TOGGLE CONTROLS
   const toggleDiv = document.createElement("div");
   toggleDiv.className = "control-box";
