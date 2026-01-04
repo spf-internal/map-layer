@@ -95,6 +95,8 @@ function initMap() {
   const hoverInfoWindow = new google.maps.InfoWindow({
     disableAutoPan: true
   });
+  let hoveredFeature = null;
+  let hoverCloseTimer = null;
 
   // NPC POLYGON LAYER
   const npcLayer = new google.maps.Data({ map });
@@ -175,6 +177,16 @@ function initMap() {
 
   estLayer.addListener("mouseover", e => {
     map.getDiv().style.cursor = "pointer";
+
+    // cancel pending close
+    if (hoverCloseTimer) {
+      clearTimeout(hoverCloseTimer);
+      hoverCloseTimer = null;
+    }
+    // same feature → do nothing
+    if (hoveredFeature === e.feature) return;
+    hoveredFeature = e.feature;
+    
     const props = e.feature;
     hoverInfoWindow.setContent(buildEstablishmentPopUpContent(props));
     hoverInfoWindow.setPosition(e.latLng);
@@ -183,7 +195,12 @@ function initMap() {
 
   estLayer.addListener("mouseout", () => {
     map.getDiv().style.cursor = "";
-    hoverInfoWindow.close();
+
+    // delay close to prevent flicker
+    hoverCloseTimer = setTimeout(() => {
+      hoverInfoWindow.close();
+      hoveredFeature = null;
+    }, 120);
   });
 
   // TOGGLE CONTROLS
