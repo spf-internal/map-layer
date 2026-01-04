@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Singapore Police NPC Boundaries</title>
+  <title>Singapore Police NPC & Establishments</title>
   <meta charset="utf-8" />
   <style>
     body { margin: 0; }
@@ -15,7 +15,11 @@
       font-size: 14px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-
+    
+    .legend-row {
+      margin-top: 6px;
+    }
+    
     .color-box {
       display: inline-block;
       width: 14px;
@@ -24,6 +28,9 @@
       margin-right: 6px;
       vertical-align: middle;
     }
+
+    .npc { background: #0047AB; }
+    .est { background: #D32F2F; border-radius: 50%; }
   </style>
 </head>
 
@@ -32,76 +39,105 @@
 
 <script>
 function initMap() {
-  // 1. Initialise map
   const map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 1.3521, lng: 103.8198 },
     zoom: 11
   });
-
-  // 🔁 LOAD NPCs FROM CLOUDFLARE WORKER
-  const GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev";
   const bounds = new google.maps.LatLngBounds();
-  map.data.loadGeoJson(GEOJSON_PROXY_URL, null, features => {
-    features.forEach(feature => {
-      // if (!feature.getProperty("NPC_NAME")) {
-      //   map.data.remove(feature);
-      //   return;
-      // }
-      collectLatLng(feature.getGeometry(), bounds);
-    });
-  
-    // 👇 ONE single call
-    map.fitBounds(bounds);
-  });
-  
-  // 2. Style NPC polygons
-  map.data.setStyle({
-    fillColor: "#0047AB",
-    fillOpacity: 1,
-    strokeColor: "#0047AB",
-    strokeWeight: 5
-  });
-
-  // 3. Click popup
   const infoWindow = new google.maps.InfoWindow();
-  map.data.addListener("click", event => {
-    const name =
-      event.feature.getProperty("NPC_NAME") ||
-      "NIL";
 
-    infoWindow.setContent(`<b>NPC Name:</b> ${name}`);
-    infoWindow.setPosition(event.latLng);
+  // NPC POLYGON LAYER
+  const npcLayer = new google.maps.Data({ map });
+  const NPC_GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev";
+  npcLayer.loadGeoJson(
+    NPC_GEOJSON_PROXY_URL, null, features => {
+      features.forEach(f =>
+        collectLatLng(f.getGeometry(), bounds)
+      );
+      map.fitBounds(bounds);
+    }
+  );
+  
+  npcLayer.setStyle({
+    fillColor: "#0047AB",
+    fillOpacity: 0.6,
+    strokeColor: "#0047AB",
+    strokeWeight: 2
+  });
+
+  npcLayer.addListener("click", e => {
+    infoWindow.setContent(
+      `<b>NPC:</b> ${e.feature.getProperty("NPC_NAME") || "NIL"}`
+    );
+    infoWindow.setPosition(e.latLng);
     infoWindow.open(map);
   });
 
-  // 4. Toggle control
+  // ESTABLISHMENTS POINT LAYER
+  const estLayer = new google.maps.Data({ map });
+  const ESTABLISHMENTS_GEOJSON_PROXY_URL = "https://spf-establishments-proxy.seixiang232.workers.dev";
+  
+  estLayer.loadGeoJson(
+    ESTABLISHMENTS_GEOJSON_PROXY_URL
+  );
+
+  estLayer.setStyle({
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 5,
+      fillColor: "#D32F2F",
+      fillOpacity: 1,
+      strokeWeight: 1,
+      strokeColor: "#ffffff"
+    }
+  });
+
+  estLayer.addListener("click", e => {
+    infoWindow.setContent(`
+      <b>Establishment</b><br>
+      ${e.feature.getProperty("establishment") || "NIL"}<br>
+      ${e.feature.getProperty("address") || ""}
+    `);
+    infoWindow.setPosition(e.latLng);
+    infoWindow.open(map);
+  });
+
+  // TOGGLE CONTROLS
   const toggleDiv = document.createElement("div");
   toggleDiv.className = "control-box";
   toggleDiv.innerHTML = `
     <label>
-      <input type="checkbox" checked>
-      Show NPC Boundaries
+      <input type="checkbox" checked id="npcToggle">
+      Show SPF NPC Boundaries
+    </label><br>
+    <label>
+      <input type="checkbox" checked id="estToggle">
+      Show SPF Establishments
     </label>
   `;
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(toggleDiv);
   
-  // ✅ Attach listener correctly
-  const checkbox = toggleDiv.querySelector("input");
-  checkbox.addEventListener("change", e => {
-    map.data.setMap(e.target.checked ? map : null);
-  });
+  document.getElementById("npcToggle").onchange = e =>
+    npcLayer.setMap(e.target.checked ? map : null);
+  document.getElementById("estToggle").onchange = e =>
+    estLayer.setMap(e.target.checked ? map : null);
 
-  // 5. Legend
+  // LEGEND
   const legend = document.createElement("div");
   legend.className = "control-box";
   legend.innerHTML = `
-    <b>Legend</b><br>
-    <span class="color-box"></span> Neighbourhood Police Centre
+    <b>Legend</b>
+    <div class="legend-row">
+      <span class="color-box npc"></span> NPC Boundary
+    </div>
+    <div class="legend-row">
+      <span class="color-box est"></span> Establishment
+    </div>
   `;
   map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(legend);
 }
 
-// 🔁 Recursive geometry handler (Polygon + MultiPolygon safe)
+// GEOMETRY BOUNDS HELPER
 function collectLatLng(geometry, bounds) {
   // Point
   if (geometry instanceof google.maps.Data.Point) {
@@ -143,7 +179,7 @@ window.initMap = initMap;
 <!-- 🔑 Google Maps API -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
-  async>
+  async defer>
 </script>
 
 </body>
