@@ -109,11 +109,6 @@ function initMap() {
   let clickedFeature = null;
   let hoveredFeature = null;
   
-  map.addListener("mousemove", e => {
-    tooltip.style.left = e.domEvent.clientX + 12 + "px";
-    tooltip.style.top = e.domEvent.clientY + 12 + "px";
-  });
-
   map.addListener("bounds_changed", () => {
     if (tooltip.style.display === "block" && currentFeature) {
       const point = map.getProjection().fromLatLngToPoint(currentFeatureLatLng);
@@ -205,7 +200,7 @@ function initMap() {
   estLayer.addListener("mouseover", e => {
     const props = e.feature;
     
-    // same feature → do nothing
+    // if already clicked → do nothing
     hoveredFeature = props;
     if (hoveredFeature === clickedFeature) return;
     
@@ -214,13 +209,14 @@ function initMap() {
     tooltip.style.display = "block";
 
     // Convert LatLng to pixel position
-    const scale = Math.pow(2, map.getZoom());
     const proj = map.getProjection();
     if (proj) {
-      const point = proj.fromLatLngToPoint(e.latLng);
-      const mapDiv = map.getDiv();
-      const top = point.y * scale - tooltip.offsetHeight - 8; // 8px above
-      const left = point.x * scale - tooltip.offsetWidth / 2;  // center horizontally
+      const point = proj.fromLatLngToDivPixel(e.latLng);
+  
+      // Center horizontally above the circle, with 8px gap
+      const left = point.x - tooltip.offsetWidth / 2;
+      const top = point.y - tooltip.offsetHeight - 8;
+  
       tooltip.style.left = `${left}px`;
       tooltip.style.top = `${top}px`;
     }
