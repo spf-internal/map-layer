@@ -117,10 +117,11 @@ function initMap() {
   `;
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(toggleDiv);
   
-  document.getElementById("npcToggle").onchange = e =>
-    npcLayer.setMap(e.target.checked ? map : null);
-  document.getElementById("estToggle").onchange = e =>
-    estLayer.setMap(e.target.checked ? map : null);
+  const npcToggle = toggleDiv.querySelector("#npcToggle");
+  const estToggle = toggleDiv.querySelector("#estToggle");
+  
+  npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+  estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
 
   // LEGEND
   const legend = document.createElement("div");
