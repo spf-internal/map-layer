@@ -48,7 +48,7 @@ function initMap() {
 
   // NPC POLYGON LAYER
   const npcLayer = new google.maps.Data({ map });
-  const NPC_GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev";
+  const NPC_GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev/";
   npcLayer.loadGeoJson(
     NPC_GEOJSON_PROXY_URL, null, features => {
       features.forEach(f =>
@@ -75,7 +75,7 @@ function initMap() {
 
   // ESTABLISHMENTS POINT LAYER
   const estLayer = new google.maps.Data({ map });
-  const ESTABLISHMENTS_GEOJSON_PROXY_URL = "https://spf-establishments-proxy.seixiang232.workers.dev";
+  const ESTABLISHMENTS_GEOJSON_PROXY_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
   
   estLayer.loadGeoJson(
     ESTABLISHMENTS_GEOJSON_PROXY_URL
