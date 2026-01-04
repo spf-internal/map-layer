@@ -106,6 +106,8 @@ function initMap() {
   const bounds = new google.maps.LatLngBounds();
   const infoWindow = new google.maps.InfoWindow();
   const tooltip = document.getElementById("hoverTooltip");
+  let clickedFeature = null;
+  let hoveredFeature = null;
   
   map.addListener("mousemove", e => {
     tooltip.style.left = e.domEvent.clientX + 12 + "px";
@@ -193,14 +195,21 @@ function initMap() {
 
   estLayer.addListener("click", e => {
     const props = e.feature;
+    
     infoWindow.setContent(buildEstablishmentPopUpContent(props));
     infoWindow.setPosition(e.latLng);
     infoWindow.open(map);
+    clickedFeature = props;
   });
 
   estLayer.addListener("mouseover", e => {
-    map.getDiv().style.cursor = "pointer";
     const props = e.feature;
+    
+    // same feature → do nothing
+    hoveredFeature = props;
+    if (hoveredFeature === clickedFeature) return;
+    
+    map.getDiv().style.cursor = "pointer";
     tooltip.innerHTML = buildEstablishmentPopUpContent(props);
     tooltip.style.display = "block";
 
