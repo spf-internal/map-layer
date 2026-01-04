@@ -122,6 +122,19 @@ function initMap() {
     infoWindow.open(map);
   });
 
+  npcLayer.addListener("mouseover", e => {
+    map.getDiv().style.cursor = "pointer";
+    const props = e.feature;
+    hoverInfoWindow.setContent(buildNPCBoundaryPopUpContent(props));
+    hoverInfoWindow.setPosition(e.latLng);
+    hoverInfoWindow.open(map);
+  });
+
+  npcLayer.addListener("mouseout", () => {
+    map.getDiv().style.cursor = "";
+    hoverInfoWindow.close();
+  });
+
   // ESTABLISHMENTS POINT LAYER
   const estLayer = new google.maps.Data({ map });
   const ESTABLISHMENTS_GEOJSON_PROXY_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
@@ -155,7 +168,7 @@ function initMap() {
 
   estLayer.addListener("click", e => {
     const props = e.feature;
-    infoWindow.setContent(buildEstablishmentContent(props));
+    infoWindow.setContent(buildEstablishmentPopUpContent(props));
     infoWindow.setPosition(e.latLng);
     infoWindow.open(map);
   });
@@ -163,7 +176,7 @@ function initMap() {
   estLayer.addListener("mouseover", e => {
     map.getDiv().style.cursor = "pointer";
     const props = e.feature;
-    hoverInfoWindow.setContent(buildEstablishmentContent(props));
+    hoverInfoWindow.setContent(buildEstablishmentPopUpContent(props));
     hoverInfoWindow.setPosition(e.latLng);
     hoverInfoWindow.open(map);
   });
