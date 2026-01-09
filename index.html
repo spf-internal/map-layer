@@ -1,397 +1,327 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Singapore Police NPC & Establishments</title>
   <meta charset="utf-8" />
+  <title>Singapore Police NPC & NPP</title>
   <style>
-    body { margin: 0; }
-    #map { height: 100vh; width: 100%; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
 
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* ---------- Controls ---------- */
     .control-box {
-      background: white;
+      background: #ffffff;
       padding: 10px;
       margin: 10px;
       border-radius: 6px;
       font-size: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
-    
+
     .legend-row {
       margin-top: 6px;
     }
-    
+
     .color-box {
       display: inline-block;
       width: 14px;
       height: 14px;
-      background: #0047AB;
       margin-right: 6px;
       vertical-align: middle;
     }
 
+    .npc-boundary { background: #0047AB; }
+    .npc { background: #0047AB; border-radius: 50%; }
+    .npp { background: #4CAF50; border-radius: 50%; }
+    .closed { background: #D32F2F; border-radius: 50%; }
+
+    /* ---------- Hover Tooltip ---------- */
     #hoverTooltip {
       position: fixed;
       pointer-events: none;
-      background: white;
+      background: #ffffff;
       padding: 6px 8px;
       border-radius: 4px;
       font-size: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       display: none;
       z-index: 9999;
     }
 
-    .npc-boundary { background: #0047AB; } /* Blue */
-    .npc { background: #0047AB; border-radius: 50%; } /* Blue */
-    .npp { background: #4CAF50; border-radius: 50%; } /* Green */
-    .est { background: #FFA500; border-radius: 50%; } /* Orange */
-    .closed { background: #D32F2F; border-radius: 50%; } /* Red */
-    
-    /* InfoWindow Table Styles */
+    /* ---------- InfoWindow ---------- */
     .info-window {
       max-height: 250px;
       overflow-y: auto;
       font-size: 13px;
-      font-family: Arial, sans-serif;
     }
-  
-    .info-window b {
-      font-size: 14px;
-      margin-bottom: 5px;
-      display: block;
-    }
-  
+
     .info-table {
-      border-collapse: collapse;
       width: 100%;
       min-width: 300px;
-      text-align: left;
+      border-collapse: collapse;
     }
-  
+
     .info-table thead tr {
-      background-color: #f0f0f0;
+      background: #f0f0f0;
       position: sticky;
       top: 0;
     }
-  
-    .info-table th, .info-table td {
+
+    .info-table th,
+    .info-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #eee;
+      text-align: left;
     }
-  
+
     .info-table td:first-child {
       font-weight: bold;
     }
-  
+
     .info-table tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-  
-    .info-table tbody tr:nth-child(odd) {
-      background-color: #ffffff;
+      background: #f9f9f9;
     }
   </style>
 </head>
 
 <body>
-<div id="map"></div>
-<div id="hoverTooltip"></div>
+  <div id="map"></div>
+  <div id="hoverTooltip"></div>
+  <script>
+    /* =====================
+       Constants
+    ====================== */
+    const MAP_CENTER = { lat: 1.3521, lng: 103.8198 };
+    const NPC_GEOJSON_URL = "https://npc-boundary-geojson-proxy.seixiang232.workers.dev/";
+    const EST_GEOJSON_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
 
-<script>
-function initMap() {
-  const map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 1.3521, lng: 103.8198 },
-    zoom: 11
-  });
-  const bounds = new google.maps.LatLngBounds();
-  const infoWindow = new google.maps.InfoWindow();
-  const tooltip = document.getElementById("hoverTooltip");
-  let clickedFeature = null;
-  let hoveredFeature = null;
+    const COLORS = {
+      NPC: "#0047AB",
+      NPP: "#4CAF50",
+      CLOSED: "#D32F2F",
+      DEFAULT: "#FFA500"
+    };
 
-  const overlay = new google.maps.OverlayView();
-  overlay.onAdd = function() {};
-  overlay.draw = function() {};
-  overlay.setMap(map);
-  
-  map.addListener("bounds_changed", () => {
-    if (tooltip.style.display === "block" && currentFeature) {
-      const point = map.getProjection().fromLatLngToPoint(currentFeatureLatLng);
-      const scale = Math.pow(2, map.getZoom());
-      tooltip.style.left = `${point.x * scale - tooltip.offsetWidth / 2}px`;
-      tooltip.style.top = `${point.y * scale - tooltip.offsetHeight - 8}px`;
+    let map;
+    let infoWindow;
+    let tooltip;
+    let clickedFeature = null;
+
+    /* =====================
+       Init Map
+    ====================== */
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: MAP_CENTER,
+        zoom: 11
+      });
+
+      infoWindow = new google.maps.InfoWindow();
+      tooltip = document.getElementById("hoverTooltip");
+
+      const overlay = createOverlay(map);
+
+      const npcLayer = createNpcLayer(map);
+      const estLayer = createEstablishmentLayer(map, overlay);
+
+      createToggleControls(map, npcLayer, estLayer);
+      createLegend(map);
     }
-  });
 
-  // NPC POLYGON LAYER
-  const npcLayer = new google.maps.Data({ map });
-  const NPC_GEOJSON_PROXY_URL = "https://npc-geojson-proxy.seixiang232.workers.dev/";
-  npcLayer.loadGeoJson(
-    NPC_GEOJSON_PROXY_URL, null, features => {
-      features.forEach(f =>
-        collectLatLng(f.getGeometry(), bounds)
-      );
-      // map.fitBounds(bounds);
-    }
-  );
-  
-  npcLayer.setStyle({
-    fillColor: "#0047AB",
-    fillOpacity: 0.6,
-    strokeColor: "#0047AB",
-    strokeWeight: 2
-  });
+    /* =====================
+       Layers
+    ====================== */
+    function createNpcLayer(map) {
+      const layer = new google.maps.Data({ map });
 
-  npcLayer.addListener("click", e => {
-    const props = e.feature;
-    infoWindow.setContent(buildNPCBoundaryPopUpContent(props));
-    infoWindow.setPosition(e.latLng);
-    infoWindow.open(map);
-  });
-
-  // npcLayer.addListener("mouseover", e => {
-  //   map.getDiv().style.cursor = "pointer";
-  //   const props = e.feature;
-  //   hoverInfoWindow.setContent(buildNPCBoundaryPopUpContent(props));
-  //   hoverInfoWindow.setPosition(e.latLng);
-  //   hoverInfoWindow.open(map);
-  // });
-
-  // npcLayer.addListener("mouseout", () => {
-  //   map.getDiv().style.cursor = "";
-  //   hoverInfoWindow.close();
-  // });
-
-  // ESTABLISHMENTS POINT LAYER
-  const estLayer = new google.maps.Data({ map });
-  const ESTABLISHMENTS_GEOJSON_PROXY_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
-  
-  estLayer.loadGeoJson(
-    ESTABLISHMENTS_GEOJSON_PROXY_URL
-  );
-
-  estLayer.setStyle(feature => {
-    const department = feature.getProperty("DEPARTMENT") || "";
-    const isNPC = department.includes("Neighbourhood Police Centre");
-    const isNPP = department.includes("Neighbourhood Police Post");
-    const isClosed = department.includes("Closed");
-
-    let fillColor = "#FFA500"; // default: orange
-    if (isNPC) fillColor = "#0047AB";   // blue
-    if (isNPP) fillColor = "#4CAF50"; // green
-    if (isClosed) fillColor = "#D32F2F"; // red
+      layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
+        features.forEach(feature => {
+          const npcName = feature.getProperty("NPC_NAME");
     
-    return {
-      icon: {
+          // Remove features that do NOT have NPC_NAME
+          if (!npcName || npcName.trim() === "") {
+            layer.remove(feature);
+          }
+        });
+      });
+      
+      layer.setStyle(feature => {
+        const name = feature.getProperty("NPC_NAME");
+    
+        return {
+          fillColor: stringToColor(name),
+          fillOpacity: 0.55,
+          strokeColor: "#333333",
+          strokeWeight: 1.5
+        };
+      });
+      
+      layer.addListener("click", e => {
+        infoWindow.setContent(buildNpcContent(e.feature));
+        infoWindow.setPosition(e.latLng);
+        infoWindow.open(map);
+      });
+
+      return layer;
+    }
+
+    function createEstablishmentLayer(map, overlay) {
+      const layer = new google.maps.Data({ map });
+
+      layer.loadGeoJson(EST_GEOJSON_URL);
+
+      layer.setStyle(feature => ({
+        icon: buildEstablishmentIcon(feature)
+      }));
+
+      layer.addListener("click", e => {
+        clickedFeature = e.feature;
+        infoWindow.setContent(buildEstContent(e.feature));
+        infoWindow.setPosition(e.latLng);
+        infoWindow.open(map);
+      });
+
+      layer.addListener("mouseover", e => {
+        if (e.feature === clickedFeature) return;
+
+        map.getDiv().style.cursor = "pointer";
+        tooltip.innerHTML = buildEstContent(e.feature);
+        tooltip.style.display = "block";
+
+        const point = overlay.getProjection().fromLatLngToDivPixel(e.latLng);
+        tooltip.style.left = `${point.x - tooltip.offsetWidth / 2}px`;
+        tooltip.style.top = `${point.y - tooltip.offsetHeight - 8}px`;
+      });
+
+      layer.addListener("mouseout", () => {
+        map.getDiv().style.cursor = "";
+        tooltip.style.display = "none";
+      });
+
+      return layer;
+    }
+
+    /* =====================
+       UI Components
+    ====================== */
+    function createToggleControls(map, npcLayer, estLayer) {
+      const div = document.createElement("div");
+      div.className = "control-box";
+      div.innerHTML = `
+        <b>Filter</b><br />
+        <label><input type="checkbox" checked /> NPC Boundaries</label><br />
+        <label><input type="checkbox" checked /> Establishments</label>
+      `;
+
+      const [npcToggle, estToggle] = div.querySelectorAll("input");
+
+      npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+      estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
+    }
+
+    function createLegend(map) {
+      const div = document.createElement("div");
+      div.className = "control-box";
+      div.innerHTML = `
+        <b>Legend</b>
+        <div class="legend-row"><span class="color-box npc-boundary"></span> NPC Boundary</div>
+        <div class="legend-row"><span class="color-box npc"></span> NPC</div>
+        <div class="legend-row"><span class="color-box npp"></span> NPP</div>
+        <div class="legend-row"><span class="color-box closed"></span> Closed</div>
+      `;
+
+      map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(div);
+    }
+
+    /* =====================
+       Helpers
+    ====================== */
+    function createOverlay(map) {
+      const overlay = new google.maps.OverlayView();
+      overlay.onAdd = overlay.draw = () => {};
+      overlay.setMap(map);
+      return overlay;
+    }
+
+    function buildEstablishmentIcon(feature) {
+      const dept = feature.getProperty("DEPARTMENT") || "";
+
+      let color = COLORS.DEFAULT;
+      if (dept.includes("Neighbourhood Police Centre")) color = COLORS.NPC;
+      if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
+      if (dept.includes("Closed")) color = COLORS.CLOSED;
+
+      return {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 8,
-        fillColor: fillColor,
+        fillColor: color,
         fillOpacity: 1,
-        strokeWeight: 1,
-        strokeColor: "#ffffff"
-      }
-    };
-  });
-
-  estLayer.addListener("click", e => {
-    const props = e.feature;
-    
-    infoWindow.setContent(buildEstablishmentPopUpContent(props));
-    infoWindow.setPosition(e.latLng);
-    infoWindow.open(map);
-    clickedFeature = props;
-  });
-
-  estLayer.addListener("mouseover", e => {
-    const props = e.feature;
-    
-    // if already clicked → do nothing
-    hoveredFeature = props;
-    if (hoveredFeature === clickedFeature) return;
-    
-    map.getDiv().style.cursor = "pointer";
-    tooltip.innerHTML = buildEstablishmentPopUpContent(props);
-    tooltip.style.display = "block";
-
-    // Convert LatLng to pixel position
-    const proj = overlay.getProjection(); // Use overlay
-    if (proj) {
-      const point = proj.fromLatLngToDivPixel(e.latLng);
-      const left = point.x - tooltip.offsetWidth / 2;
-      const top = point.y - tooltip.offsetHeight - 8; // 8px above circle
-  
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
+        strokeColor: "#ffffff",
+        strokeWeight: 1
+      };
     }
-  });
 
-  estLayer.addListener("mouseout", () => {
-    map.getDiv().style.cursor = "";
-    tooltip.style.display = "none";
-  });
+    function buildNpcContent(feature) {
+      return buildTable("NPC Info", [
+        ["OBJECTID", feature.getProperty("OBJECTID")],
+        ["NPC_NAME", feature.getProperty("NPC_NAME")],
+        ["DIVISION", feature.getProperty("DIVISION")]
+      ]);
+    }
 
-  // TOGGLE CONTROLS
-  const toggleDiv = document.createElement("div");
-  toggleDiv.className = "control-box";
-  toggleDiv.innerHTML = `
-    <b>Filter</b><br>
-    <label>
-      <input type="checkbox" checked id="npcToggle">
-      Show SPF NPC Boundaries
-    </label><br>
-    <label>
-      <input type="checkbox" checked id="estToggle">
-      Show SPF Establishments
-    </label>
-  `;
-  map.controls[google.maps.ControlPosition.TOP_LEFT].push(toggleDiv);
-  
-  const npcToggle = toggleDiv.querySelector("#npcToggle");
-  const estToggle = toggleDiv.querySelector("#estToggle");
-  
-  npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
-  estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+    function buildEstContent(feature) {
+      return buildTable("Establishment Info", [
+        ["DEPARTMENT", feature.getProperty("DEPARTMENT")],
+        ["TYPE", feature.getProperty("TYPE")],
+        ["OPERATING_HOURS", feature.getProperty("OPERATING_HOURS")],
+        ["TELEPHONE", feature.getProperty("TELEPHONE")]
+      ]);
+    }
 
-  // LEGEND
-  const legend = document.createElement("div");
-  legend.className = "control-box";
-  legend.innerHTML = `
-    <b>Legend</b>
-    <div class="legend-row">
-      <span class="color-box npc-boundary"></span> Neighbourhood Police Centres (NPCs) Boundary
-    </div>
-    <div class="legend-row">
-      <span class="color-box npc"></span> Neighbourhood Police Centres (NPCs)
-    </div>
-    <div class="legend-row">
-      <span class="color-box npp"></span> Neighbourhood Police Post (NPP)
-    </div>
-    <div class="legend-row">
-      <span class="color-box est"></span> Other Establishments
-    </div>
-    <div class="legend-row">
-      <span class="color-box closed"></span> Closed Establishments
-    </div>
-  `;
-  map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(legend);
-}
+    function buildTable(title, rows) {
+      return `
+        <div class="info-window">
+          <b>${title}</b>
+          <table class="info-table">
+            <tbody>
+              ${rows.map(([k, v]) => `
+                <tr><td>${k}</td><td>${v || "NIL"}</td></tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
 
-// GEOMETRY BOUNDS HELPER
-function collectLatLng(geometry, bounds) {
-  // Point
-  if (geometry instanceof google.maps.Data.Point) {
-    bounds.extend(geometry.get());
-    return;
-  }
+    function stringToColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+    
+      const hue = Math.abs(hash) % 360;
+    
+      return `hsl(${hue}, 70%, 55%)`;
+    }
 
-  // LineString or LinearRing
-  if (
-    geometry instanceof google.maps.Data.LineString ||
-    geometry instanceof google.maps.Data.LinearRing
-  ) {
-    geometry.getArray().forEach(latlng => bounds.extend(latlng));
-    return;
-  }
+    window.initMap = initMap;
+  </script>
 
-  // Polygon
-  if (geometry instanceof google.maps.Data.Polygon) {
-    geometry.getArray().forEach(ring => {
-      ring.getArray().forEach(latlng => bounds.extend(latlng));
-    });
-    return;
-  }
+  <!-- Google Maps API -->
 
-  // MultiPolygon
-  if (geometry instanceof google.maps.Data.MultiPolygon) {
-    geometry.getArray().forEach(polygon => {
-      polygon.getArray().forEach(ring => {
-        ring.getArray().forEach(latlng => bounds.extend(latlng));
-      });
-    });
-    return;
-  }
-}
-
-// NPC Boundary PopUp Content
-function buildNPCBoundaryPopUpContent(props) {
-  return `
-    <div class="info-window">
-      <h2>Establishment Info:</h2>
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${[
-            ["OBJECTID", props.getProperty("OBJECTID")],
-            ["NPC_NAME", props.getProperty("NPC_NAME")],
-            ["DIVISION", props.getProperty("DIVISION")],
-            ["DIV", props.getProperty("DIV")],
-            ["INC_CRC", props.getProperty("INC_CRC")],
-            ["FMEL_UPD_D", props.getProperty("FMEL_UPD_D")]
-          ].map(([field, value]) => `
-            <tr>
-              <td>${field}</td>
-              <td>${value || 'NIL'}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `
-}
-
-// Establishment PopUp Content
-function buildEstablishmentPopUpContent(props) {
-  return `
-    <div class="info-window">
-      <h2>Establishment Info:</h2>
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${[
-            ["OBJECTID_1", props.getProperty("OBJECTID_1")],
-            ["DEPARTMENT", props.getProperty("DEPARTMENT")],
-            ["TYPE", props.getProperty("TYPE")],
-            ["OPERATING_HOURS", props.getProperty("OPERATING_HOURS")],
-            ["TELEPHONE", props.getProperty("TELEPHONE")],
-            ["ALT_TELEPHONE_LINE", props.getProperty("ALT_TELEPHONE_LINE")],
-            ["BUILDING_NAME", props.getProperty("BUILDING_NAME")],
-            ["HSE_BLK_NO", props.getProperty("HSE_BLK_NO")],
-            ["UNIT", props.getProperty("UNIT")],
-            ["STREET_NAME", props.getProperty("STREET_NAME")],
-            ["POSTAL_CODE", props.getProperty("POSTAL_CODE")],
-            ["FAX", props.getProperty("FAX")],
-            ["INC_CRC", props.getProperty("INC_CRC")],
-            ["FMEL_UPD_D", props.getProperty("FMEL_UPD_D")]
-          ].map(([field, value]) => `
-            <tr>
-              <td>${field}</td>
-              <td>${value || 'NIL'}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `
-}
-
-window.initMap = initMap;
-</script>
-
-<!-- 🔑 Google Maps API -->
-<script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
-  async defer>
-</script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap"
+    async
+    defer
+  ></script>
 
 </body>
 </html>
