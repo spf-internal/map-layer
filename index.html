@@ -36,8 +36,6 @@
       vertical-align: middle;
     }
 
-    .npc-boundary { background: #0047AB; }
-    .npc { background: #0047AB; border-radius: 50%; }
     .npp { background: #4CAF50; border-radius: 50%; }
     .closed { background: #D32F2F; border-radius: 50%; }
 
@@ -102,7 +100,6 @@
     const EST_GEOJSON_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
 
     const COLORS = {
-      NPC: "#0047AB",
       NPP: "#4CAF50",
       CLOSED: "#D32F2F",
       DEFAULT: "#FFA500"
@@ -143,7 +140,7 @@
       layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
         features.forEach(feature => {
           const npcName = feature.getProperty("NPC_NAME");
-    
+          
           // Remove features that do NOT have NPC_NAME
           if (!npcName || npcName.trim() === "") {
             layer.remove(feature);
@@ -232,8 +229,6 @@
       div.className = "control-box";
       div.innerHTML = `
         <b>Legend</b>
-        <div class="legend-row"><span class="color-box npc-boundary"></span> NPC Boundary</div>
-        <div class="legend-row"><span class="color-box npc"></span> NPC</div>
         <div class="legend-row"><span class="color-box npp"></span> NPP</div>
         <div class="legend-row"><span class="color-box closed"></span> Closed</div>
       `;
@@ -250,14 +245,13 @@
       overlay.setMap(map);
       return overlay;
     }
-
+    
     function buildEstablishmentIcon(feature) {
       const dept = feature.getProperty("DEPARTMENT") || "";
 
       let color = COLORS.DEFAULT;
-      if (dept.includes("Neighbourhood Police Centre")) color = COLORS.NPC;
       if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
-      if (dept.includes("Closed")) color = COLORS.CLOSED;
+      if (dept.includes("Neighbourhood Police Post") && dept.includes("Closed")) color = COLORS.CLOSED;
 
       return {
         path: google.maps.SymbolPath.CIRCLE,
@@ -273,16 +267,29 @@
       return buildTable("NPC Info", [
         ["OBJECTID", feature.getProperty("OBJECTID")],
         ["NPC_NAME", feature.getProperty("NPC_NAME")],
-        ["DIVISION", feature.getProperty("DIVISION")]
+        ["DIVISION", feature.getProperty("DIVISION")],
+        ["DIV", feature.getProperty("DIV")],
+        ["INC_CRC", feature.getProperty("INC_CRC")],
+        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
 
     function buildEstContent(feature) {
       return buildTable("Establishment Info", [
+        ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
         ["DEPARTMENT", feature.getProperty("DEPARTMENT")],
         ["TYPE", feature.getProperty("TYPE")],
         ["OPERATING_HOURS", feature.getProperty("OPERATING_HOURS")],
-        ["TELEPHONE", feature.getProperty("TELEPHONE")]
+        ["TELEPHONE", feature.getProperty("TELEPHONE")],
+        ["ALT_TELEPHONE_LINE", feature.getProperty("ALT_TELEPHONE_LINE")],
+        ["BUILDING_NAME", feature.getProperty("BUILDING_NAME")],
+        ["HSE_BLK_NO", feature.getProperty("HSE_BLK_NO")],
+        ["UNIT", feature.getProperty("UNIT")],
+        ["STREET_NAME", feature.getProperty("STREET_NAME")],
+        ["POSTAL_CODE", feature.getProperty("POSTAL_CODE")],
+        ["FAX", feature.getProperty("FAX")],
+        ["INC_CRC", feature.getProperty("INC_CRC")],
+        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
 
@@ -316,11 +323,9 @@
   </script>
 
   <!-- Google Maps API -->
-
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap"
-    async
-    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
+    async defer
   ></script>
 
 </body>
