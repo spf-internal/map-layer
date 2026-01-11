@@ -116,6 +116,7 @@
     let map;
     let infoWindow;
     let tooltip;
+    let tooltipOverlay;
     let clickedFeature = null;
 
     /* =====================
@@ -201,11 +202,11 @@
         tooltip.innerHTML = buildEstHoverContent(e.feature);
         tooltip.style.display = "block";
 
-        positionTooltip(e.latLng);
+        positionTooltip(e.latLng, overlay);
       });
 
       layer.addListener("mousemove", e => {
-        positionTooltip(e.latLng);
+        positionTooltip(e.latLng, overlay);
       });
       
       layer.addListener("mouseout", () => {
@@ -296,6 +297,15 @@
       ]);
     }
 
+    function buildNpcHoverContent(feature) {
+      return `
+        <div class="hover-window">
+          <b>${feature.getProperty("NPC_NAME") || "Error"}</b><br/>
+          ${feature.getProperty("DIVISION") || "NIL"}
+        </div>
+      `;
+    }
+
     function buildEstContent(feature) {
       return buildTable("NPP Info", [
         ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
@@ -351,7 +361,7 @@
       return `hsl(${hue}, 70%, 55%)`;
     }
 
-    function positionTooltip(latLng) {
+    function positionTooltip(latLng, overlay) {
       const projection = overlay.getProjection();
       if (!projection) return;
     
@@ -373,6 +383,5 @@
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
     async defer
   ></script>
-
 </body>
 </html>
