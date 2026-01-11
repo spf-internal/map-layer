@@ -37,7 +37,8 @@
     }
 
     .npp { background: #4CAF50; border-radius: 50%; }
-    .closed { background: #D32F2F; border-radius: 50%; }
+    .closed { background: #FFA500; border-radius: 50%; }
+    .error { background: #D32F2F; border-radius: 50%; }
 
     /* ---------- Hover Tooltip ---------- */
     #hoverTooltip {
@@ -101,8 +102,8 @@
 
     const COLORS = {
       NPP: "#4CAF50",
-      CLOSED: "#D32F2F",
-      DEFAULT: "#FFA500"
+      CLOSED: "#FFA500",
+      DEFAULT: "#D32F2F"
     };
 
     let map;
@@ -229,8 +230,9 @@
       div.className = "control-box";
       div.innerHTML = `
         <b>Legend</b>
-        <div class="legend-row"><span class="color-box npp"></span> NPP</div>
-        <div class="legend-row"><span class="color-box closed"></span> Closed</div>
+        <div class="legend-row"><span class="color-box npp"></span> NPP (Open)</div>
+        <div class="legend-row"><span class="color-box closed"></span> NPP (Closed)</div>
+        <div class="legend-row"><span class="color-box error"></span> Error</div>
       `;
 
       map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(div);
@@ -264,7 +266,7 @@
     }
 
     function buildNpcContent(feature) {
-      return buildTable("NPC Info", [
+      return buildTable("NPC Boundary Info", [
         ["OBJECTID", feature.getProperty("OBJECTID")],
         ["NPC_NAME", feature.getProperty("NPC_NAME")],
         ["DIVISION", feature.getProperty("DIVISION")],
@@ -275,7 +277,7 @@
     }
 
     function buildEstContent(feature) {
-      return buildTable("Establishment Info", [
+      return buildTable("NPP Info", [
         ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
         ["DEPARTMENT", feature.getProperty("DEPARTMENT")],
         ["TYPE", feature.getProperty("TYPE")],
