@@ -97,6 +97,7 @@
     let hoverInfoWindow;
     // let hoverMarker;
     let clickedFeature = null;
+    let isClickInfoWindowOpen = false;
 
     /* =====================
        Init Map
@@ -109,6 +110,10 @@
       });
 
       clickInfoWindow = new google.maps.InfoWindow();
+      clickInfoWindow.addListener("closeclick", () => {
+        isClickInfoWindowOpen = false;
+        clickedFeature = null;
+      });
       hoverInfoWindow = new google.maps.InfoWindow({
         disableAutoPan: true
       });
@@ -155,12 +160,17 @@
       });
       
       layer.addListener("click", e => {
+        clickedFeature = e.feature;
+        hoverInfoWindow.close();
         clickInfoWindow.setContent(buildNpcContent(e.feature));
         clickInfoWindow.setPosition(e.latLng);
         clickInfoWindow.open(map);
+        isClickInfoWindowOpen = true;
       });
 
       layer.addListener("mouseover", e => {
+        if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
+        
         map.getDiv().style.cursor = "pointer";
         hoverInfoWindow.setContent(buildNpcHoverContent(e.feature));
         hoverInfoWindow.setPosition(e.latLng);
@@ -168,7 +178,12 @@
       });
 
       layer.addListener("mousemove", e => {
-        hoverInfoWindow.setPosition(e.latLng);
+        if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
+        
+        hoverInfoWindow.setPosition({
+          lat: e.latLng.lat() + 0.00015,
+          lng: e.latLng.lng()
+        });
       });
 
       layer.addListener("mouseout", () => {
