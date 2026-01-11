@@ -189,6 +189,10 @@
         clickInfoWindow.setPosition(e.latLng);
         clickInfoWindow.open(map);
         isClickInfoWindowOpen = true;
+
+        // --- Zoom & Pan ---
+        map.setZoom(15);
+        map.panTo(e.latLng);
       });
 
       layer.addListener("mouseover", e => {
@@ -226,6 +230,11 @@
         clickInfoWindow.setPosition(e.latLng);
         clickInfoWindow.open(map);
         isClickInfoWindowOpen = true;
+
+        // --- Zoom & Pan ---
+        const bounds = new google.maps.LatLngBounds();
+        e.feature.getGeometry().forEachLatLng(latlng => bounds.extend(latlng));
+        map.fitBounds(bounds); // automatically pans & zooms to fit
       });
       
       layer.addListener("mouseover", e => {
