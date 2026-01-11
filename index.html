@@ -314,11 +314,10 @@
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       
-      const hue = Math.abs(hash) % 360;
-      const saturation = 60 + (Math.abs(hash) % 30); // 60–89%
-      const lightness = 45 + (Math.abs(hash >> 3) % 20); // 45–64%
+      const STEP = 25; // larger = more separation
+      const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
       
-      return `hsl(${hue}, ${saturation}, ${lightness})`;
+      return `hsl(${hue}, 70%, 55%)`;
     }
 
     window.initMap = initMap;
