@@ -111,12 +111,12 @@
       hoverInfoWindow = new google.maps.InfoWindow({
         disableAutoPan: true
       });
-      hoverMarker = new google.maps.Marker({
+      hoverMarker = new google.maps.marker.AdvancedMarkerElement({
         map,
-        visible: false,
-        clickable: false,
-        zIndex: google.maps.Marker.MAX_ZINDEX + 1
+        position: MAP_CENTER,
+        zIndex: 1000
       });
+      hoverMarker.map = null;
       
       const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
@@ -184,8 +184,8 @@
         
         map.getDiv().style.cursor = "pointer";
 
-        hoverMarker.setPosition(offsetLatLng(e.latLng, 40));
-        hoverMarker.setVisible(true);
+        hoverMarker.position = offsetLatLng(e.latLng, 40);
+        hoverMarker.map = map;
         
         hoverInfoWindow.setContent(buildEstHoverContent(e.feature));
         hoverInfoWindow.open({
@@ -198,7 +198,7 @@
       layer.addListener("mouseout", () => {
         map.getDiv().style.cursor = "";
         hoverInfoWindow.close();
-        hoverMarker.setVisible(false);
+        hoverMarker.map = null;
       });
 
       return layer;
@@ -337,7 +337,7 @@
 
   <!-- Google Maps API -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&libraries=marker&loading=async"
     async defer
   ></script>
 </body>
