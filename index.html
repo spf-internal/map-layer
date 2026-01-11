@@ -44,6 +44,10 @@
     #hover-tooltip {
       position: absolute;
       pointer-events: none;
+      max-width: 280px;          /* 🔥 controls tooltip width */
+      white-space: normal;       /* allow wrapping */
+      word-wrap: break-word;     /* break long words */
+      overflow-wrap: break-word; /* modern equivalent */
       background: rgba(255, 255, 255, 0.95);
       padding: 6px 8px;
       border-radius: 6px;
@@ -54,37 +58,50 @@
       transform: translate(12px, 12px);
       transition: opacity 0.12s ease;
     }
-
+    
     /* ---------- InfoWindow ---------- */
     .info-window {
       max-height: 250px;
+      max-width: 420px;       /* 🔥 limit overall width */
       overflow-y: auto;
       font-size: 13px;
+      word-wrap: break-word;  /* break long words */
+      overflow-wrap: break-word;
+      white-space: normal;    /* allow text to wrap to next line */
     }
-
+    
     .info-table {
       width: 100%;
       min-width: 300px;
       border-collapse: collapse;
+      table-layout: fixed;    /* 🔥 ensures columns respect widths and wrap */
     }
-
+    
     .info-table thead tr {
       background: #f0f0f0;
       position: sticky;
       top: 0;
     }
-
+    
     .info-table th,
     .info-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #eee;
       text-align: left;
+      vertical-align: top;      /* ensures multi-line cells align top */
     }
-
+    
     .info-table td:first-child {
       font-weight: bold;
+      width: 120px;             /* optional: keep label column narrower */
     }
-
+    
+    .info-table td:nth-child(2) {
+      max-width: 280px;         /* optional: prevent value column from stretching too far */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
     .info-table tbody tr:nth-child(even) {
       background: #f9f9f9;
     }
@@ -293,7 +310,7 @@
       return `
         <div class="info-window">
           <b>${feature.getProperty("NPC_NAME") || "Error"}</b><br/>
-          ${feature.getProperty("DIV") || "NIL"}
+          ${feature.getProperty("DIV") || "NIL"} Division
         </div>
       `;
     }
@@ -321,7 +338,7 @@
       return `
         <div class="info-window">
           <b>${feature.getProperty("DEPARTMENT") || "Error"}</b><br/>
-          ${feature.getProperty("OPERATING_HOURS") || "NIL"}
+          Operating Hours: ${feature.getProperty("OPERATING_HOURS") || "NIL"}
         </div>
       `;
     }
@@ -329,11 +346,14 @@
     function buildTable(title, rows) {
       return `
         <div class="info-window">
-          <u><h2>${title}:</h2></u>
+          <u><h1>${title}:</h1></u>
           <table class="info-table">
             <tbody>
               ${rows.map(([k, v]) => `
-                <tr><td>${k}</td><td>${v || "NIL"}</td></tr>
+                <tr>
+                  <td>${k}</td>
+                  <td>${v || "NIL"}</td>
+                </tr>
               `).join("")}
             </tbody>
           </table>
