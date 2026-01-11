@@ -40,6 +40,11 @@
     .closed { background: #FFA500; border-radius: 50%; }
     .error { background: #D32F2F; border-radius: 50%; }
 
+    /* Make hover InfoWindow ignore mouse events */
+    .gm-style .gm-style-iw-hover {
+      pointer-events: none;
+    }
+
     /* ---------- InfoWindow ---------- */
     .info-window {
       max-height: 250px;
@@ -301,9 +306,9 @@
 
     function buildNpcHoverContent(feature) {
       return `
-        <div class="info-window">
+        <div class="info-window gm-style-iw-hover">
           <b>${feature.getProperty("NPC_NAME") || "Error"}</b><br/>
-          ${feature.getProperty("DIVISION") || "NIL"}
+          ${feature.getProperty("DIV") || "NIL"}
         </div>
       `;
     }
@@ -329,7 +334,7 @@
 
     function buildEstHoverContent(feature) {
       return `
-        <div class="info-window">
+        <div class="info-window gm-style-iw-hover">
           <b>${feature.getProperty("DEPARTMENT") || "Error"}</b><br/>
           ${feature.getProperty("OPERATING_HOURS") || "NIL"}
         </div>
