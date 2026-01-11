@@ -45,6 +45,15 @@
       pointer-events: none;
     }
 
+    /* Hide close (X) button for hover InfoWindow */
+    .gm-style .gm-style-iw-hover + button,
+    .gm-style .gm-ui-hover-effect {
+      display: none !important;
+      box-shadow: none !important;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 6px;
+    }
+
     /* ---------- InfoWindow ---------- */
     .info-window {
       max-height: 250px;
