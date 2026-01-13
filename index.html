@@ -4,17 +4,22 @@
   <meta charset="utf-8" />
   <title>Singapore Police NPC & NPP</title>
   <style>
+    /* =====================
+       Base
+    ====================== */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
     }
-    
+  
     #map {
       height: 100vh;
       width: 100%;
     }
-    
-    /* ---------- Search Bar ---------- */
+  
+    /* =====================
+       Search Bar
+    ====================== */
     .search-container {
       position: absolute;
       top: 10px;
@@ -24,28 +29,35 @@
       width: 90%;
       max-width: 400px;
     }
-    
+  
     .search-box {
       position: relative;
       width: 100%;
     }
-    
-    #search-input {
+  
+    /* ---- Place Autocomplete Element ---- */
+    gmp-place-autocomplete {
+      display: block;
+      width: 100%;
+    }
+  
+    gmp-place-autocomplete::part(input) {
       width: 100%;
       padding: 12px 45px 12px 15px;
       border: none;
       border-radius: 8px;
       font-size: 16px;
+      background: #fff;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       outline: none;
-      background: white;
       box-sizing: border-box;
     }
-    
-    #search-input:focus {
+  
+    gmp-place-autocomplete::part(input):focus {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
-    
+  
+    /* ---- Search & Clear Icons ---- */
     .search-icon {
       position: absolute;
       right: 12px;
@@ -53,11 +65,12 @@
       transform: translateY(-50%);
       width: 20px;
       height: 20px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>') no-repeat center;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>')
+        no-repeat center;
       background-size: contain;
       cursor: pointer;
     }
-    
+  
     .clear-button {
       position: absolute;
       right: 40px;
@@ -65,13 +78,16 @@
       transform: translateY(-50%);
       width: 20px;
       height: 20px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>') no-repeat center;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>')
+        no-repeat center;
       background-size: contain;
       cursor: pointer;
       display: none;
     }
-    
-    /* ---------- Controls ---------- */
+  
+    /* =====================
+       Controls / Legend
+    ====================== */
     .control-box {
       background: #ffffff;
       padding: 10px;
@@ -80,11 +96,11 @@
       font-size: 14px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
-    
+  
     .legend-row {
       margin-top: 6px;
     }
-    
+  
     .color-box {
       display: inline-block;
       width: 14px;
@@ -92,19 +108,18 @@
       margin-right: 6px;
       vertical-align: middle;
     }
-    
+  
     .npp { background: #4CAF50; border-radius: 50%; }
     .closed { background: #FFA500; border-radius: 50%; }
     .error { background: #D32F2F; border-radius: 50%; }
-    
-    /* ---------- Hover Tooltip ---------- */
+  
+    /* =====================
+       Hover Tooltip
+    ====================== */
     #hover-tooltip {
       position: absolute;
       pointer-events: none;
       max-width: 280px;
-      white-space: normal;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
       background: rgba(255, 255, 255, 0.95);
       padding: 6px 8px;
       border-radius: 6px;
@@ -113,173 +128,89 @@
       display: none;
       z-index: 1000;
       transform: translate(12px, 12px);
-      transition: opacity 0.12s ease;
     }
-    
-    /* ---------- InfoWindow ---------- */
+  
+    /* =====================
+       InfoWindow
+    ====================== */
     .info-window {
       max-height: 250px;
       max-width: 420px;
       overflow-y: auto;
       font-size: 13px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
       white-space: normal;
     }
-    
+  
     .info-table {
       width: 100%;
       min-width: 300px;
       border-collapse: collapse;
       table-layout: fixed;
     }
-    
-    .info-table thead tr {
-      background: #f0f0f0;
-      position: sticky;
-      top: 0;
-    }
-    
-    .info-table th,
+  
     .info-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #eee;
-      text-align: left;
       vertical-align: top;
     }
-    
+  
     .info-table td:first-child {
       font-weight: bold;
       width: 120px;
     }
-    
-    .info-table td:nth-child(2) {
-      max-width: 280px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    
+  
     .info-table tbody tr:nth-child(even) {
       background: #f9f9f9;
     }
-    
-    /* ---------- Mobile Responsive Design ---------- */
+  
+    /* =====================
+       Responsive
+    ====================== */
     @media (max-width: 768px) {
       .search-container {
-        width: calc(100% - 140px); /* Reserve space for filter box */
+        width: calc(100% - 140px);
         max-width: 300px;
         top: 15px;
         left: 10px;
         transform: none;
       }
-    
-      #search-input {
-        font-size: 16px; /* Prevents zoom on iOS */
+  
+      gmp-place-autocomplete::part(input) {
+        font-size: 16px;
         padding: 14px 45px 14px 15px;
       }
-    
+  
       .control-box {
-        margin: 6px;
-        padding: 8px;
         font-size: 13px;
-        max-width: 120px; /* Fixed width for filter box */
-        box-sizing: border-box;
-      }
-    
-      #hover-tooltip {
-        max-width: calc(100vw - 40px);
-        font-size: 12px;
-        padding: 8px;
-      }
-    
-      .info-window {
-        max-width: calc(100vw - 40px);
-        max-height: 200px;
-        font-size: 12px;
-      }
-    
-      .info-table {
-        min-width: 250px;
-        font-size: 12px;
-      }
-    
-      .info-table td:first-child {
-        width: 100px;
-      }
-    
-      .info-table td:nth-child(2) {
-        max-width: 150px;
-      }
-    
-      .info-table th,
-      .info-table td {
-        padding: 4px 6px;
+        max-width: 120px;
       }
     }
-    
-    @media (max-width: 600px) {
+  
+    @media (max-width: 480px) {
       .search-container {
         width: calc(100% - 12px);
         top: 70px;
         left: 6px;
       }
-    
-      #search-input {
+  
+      gmp-place-autocomplete::part(input) {
         padding: 10px 35px 10px 10px;
         font-size: 16px;
       }
-    
+  
       .search-icon,
       .clear-button {
         width: 16px;
         height: 16px;
       }
-    
+  
       .clear-button {
         right: 30px;
       }
-    
+  
       .control-box {
-        margin: 3px;
+        font-size: 11px;
         padding: 5px;
-        font-size: 11px;
-      }
-      
-      .color-box {
-        width: 12px;
-        height: 12px;
-        margin-right: 4px;
-      }
-
-      #hover-tooltip {
-        max-width: calc(100vw - 20px);
-        font-size: 11px;
-        padding: 6px;
-        transform: translate(8px, 8px);
-      }
-
-      .info-window {
-        max-width: calc(100vw - 20px);
-        max-height: 180px;
-        font-size: 11px;
-      }
-      
-      .info-table {
-        min-width: 180px;
-        font-size: 10px;
-      }
-    
-      .info-table td:first-child {
-        width: 70px;
-      }
-    
-      .info-table td:nth-child(2) {
-        max-width: 100px;
-      }
-
-      .info-table th,
-      .info-table td {
-        padding: 3px 4px;
       }
     }
   </style>
@@ -291,7 +222,11 @@
   <!-- Search Bar -->
   <div class="search-container">
     <div class="search-box">
-      <input type="text" id="search-input" placeholder="Search for places..." autocomplete="off">
+      <gmp-place-autocomplete
+        id="search-input"
+        placeholder="Search for places..."
+      >
+      </gmp-place-autocomplete>
       <div class="clear-button" id="clear-button"></div>
       <div class="search-icon" id="search-button"></div>
     </div>
@@ -376,22 +311,35 @@
           performSearch(this.value);
         }
       });
-
+      
       // Search on button click
       searchButton.addEventListener('click', function() {
-        performSearch(searchInput.value);
+        performSearch(autocompleteEl.value);
       });
+
+      // Autocomplete
+      const autocompleteEl = document.querySelector('gmp-place-autocomplete');
       
-      // Initialize autocomplete
-      const autocomplete = new google.maps.places.Autocomplete(searchInput, {
-        fields: ['geometry', 'name', 'formatted_address']
-      });
+      autocompleteEl.addEventListener('gmp-placeselect', async (e) => {
+        const place = e.place;
       
-      autocomplete.addListener('place_changed', function() {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          showSearchResult(place);
-        }
+        await place.fetchFields({
+          fields: [
+            'displayName',
+            'formattedAddress',
+            'location',
+            'viewport'
+          ]
+        });
+        
+        showSearchResult({
+          name: place.displayName,
+          formatted_address: place.formattedAddress,
+          geometry: {
+            location: place.location,
+            viewport: place.viewport
+          }
+        });
       });
     }
     
@@ -735,7 +683,7 @@
       const STEP = 25;
       const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
       
-      return `hsl(${hue}, 70%, 55%)`;
+      return `hsl(${hue}, 65%, 55%)`;
     }
     
     function fitFeatureBounds(feature) {
