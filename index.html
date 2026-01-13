@@ -219,88 +219,6 @@
     
     @media (max-width: 600px) {
       .search-container {
-        width: calc(100% - 16px);
-        max-width: none;
-        top: 70px; /* Move search bar below filter box */
-        left: 8px;
-      }
-    
-      .control-box {
-        margin: 4px;
-        padding: 6px;
-        font-size: 12px;
-        max-width: none; /* Allow full width when stacked */
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .search-container {
-        width: calc(100% - 16px);
-        top: 75px; /* Adjust for smaller filter box */
-        left: 8px;
-      }
-    
-      #search-input {
-        padding: 12px 40px 12px 12px;
-        font-size: 16px;
-      }
-    
-      .search-icon,
-      .clear-button {
-        width: 18px;
-        height: 18px;
-      }
-    
-      .clear-button {
-        right: 35px;
-      }
-    
-      .control-box {
-        margin: 4px;
-        padding: 6px;
-        font-size: 12px;
-      }
-    
-      .color-box {
-        width: 12px;
-        height: 12px;
-        margin-right: 4px;
-      }
-    
-      #hover-tooltip {
-        max-width: calc(100vw - 20px);
-        font-size: 11px;
-        padding: 6px;
-        transform: translate(8px, 8px);
-      }
-    
-      .info-window {
-        max-width: calc(100vw - 20px);
-        max-height: 180px;
-        font-size: 11px;
-      }
-    
-      .info-table {
-        min-width: 200px;
-        font-size: 11px;
-      }
-    
-      .info-table td:first-child {
-        width: 80px;
-      }
-    
-      .info-table td:nth-child(2) {
-        max-width: 120px;
-      }
-    
-      .info-table th,
-      .info-table td {
-        padding: 3px 4px;
-      }
-    }
-    
-    @media (max-width: 360px) {
-      .search-container {
         width: calc(100% - 12px);
         top: 70px;
         left: 6px;
@@ -326,7 +244,26 @@
         padding: 5px;
         font-size: 11px;
       }
-    
+      
+      .color-box {
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
+      }
+
+      #hover-tooltip {
+        max-width: calc(100vw - 20px);
+        font-size: 11px;
+        padding: 6px;
+        transform: translate(8px, 8px);
+      }
+
+      .info-window {
+        max-width: calc(100vw - 20px);
+        max-height: 180px;
+        font-size: 11px;
+      }
+      
       .info-table {
         min-width: 180px;
         font-size: 10px;
@@ -338,6 +275,11 @@
     
       .info-table td:nth-child(2) {
         max-width: 100px;
+      }
+
+      .info-table th,
+      .info-table td {
+        padding: 3px 4px;
       }
     }
   </style>
