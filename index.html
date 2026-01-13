@@ -14,6 +14,63 @@
       width: 100%;
     }
 
+    /* ---------- Search Bar ---------- */
+    .search-container {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .search-box {
+      position: relative;
+      width: 100%;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 12px 45px 12px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      outline: none;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    #search-input:focus {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>') no-repeat center;
+      background-size: contain;
+      cursor: pointer;
+    }
+
+    .clear-button {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>') no-repeat center;
+      background-size: contain;
+      cursor: pointer;
+      display: none;
+    }
+
     /* ---------- Controls ---------- */
     .control-box {
       background: #ffffff;
@@ -44,10 +101,10 @@
     #hover-tooltip {
       position: absolute;
       pointer-events: none;
-      max-width: 280px;          /* 🔥 controls tooltip width */
-      white-space: normal;       /* allow wrapping */
-      word-wrap: break-word;     /* break long words */
-      overflow-wrap: break-word; /* modern equivalent */
+      max-width: 280px;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
       background: rgba(255, 255, 255, 0.95);
       padding: 6px 8px;
       border-radius: 6px;
@@ -62,19 +119,19 @@
     /* ---------- InfoWindow ---------- */
     .info-window {
       max-height: 250px;
-      max-width: 420px;       /* 🔥 limit overall width */
+      max-width: 420px;
       overflow-y: auto;
       font-size: 13px;
-      word-wrap: break-word;  /* break long words */
+      word-wrap: break-word;
       overflow-wrap: break-word;
-      white-space: normal;    /* allow text to wrap to next line */
+      white-space: normal;
     }
     
     .info-table {
       width: 100%;
       min-width: 300px;
       border-collapse: collapse;
-      table-layout: fixed;    /* 🔥 ensures columns respect widths and wrap */
+      table-layout: fixed;
     }
     
     .info-table thead tr {
@@ -88,16 +145,16 @@
       padding: 6px 8px;
       border-bottom: 1px solid #eee;
       text-align: left;
-      vertical-align: top;      /* ensures multi-line cells align top */
+      vertical-align: top;
     }
     
     .info-table td:first-child {
       font-weight: bold;
-      width: 120px;             /* optional: keep label column narrower */
+      width: 120px;
     }
     
     .info-table td:nth-child(2) {
-      max-width: 280px;         /* optional: prevent value column from stretching too far */
+      max-width: 280px;
       word-wrap: break-word;
       overflow-wrap: break-word;
     }
@@ -105,12 +162,65 @@
     .info-table tbody tr:nth-child(even) {
       background: #f9f9f9;
     }
+
+    /* ---------- Responsive Design ---------- */
+    @media (max-width: 768px) {
+      .search-container {
+        width: 95%;
+        max-width: none;
+        top: 15px;
+      }
+
+      #search-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 14px 45px 14px 15px;
+      }
+
+      .control-box {
+        margin: 8px;
+        padding: 8px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .search-container {
+        width: calc(100% - 20px);
+        top: 10px;
+      }
+
+      #search-input {
+        padding: 12px 40px 12px 12px;
+        font-size: 16px;
+      }
+
+      .search-icon,
+      .clear-button {
+        width: 18px;
+        height: 18px;
+      }
+
+      .clear-button {
+        right: 35px;
+      }
+    }
   </style>
 </head>
 
 <body>
   <div id="map"></div>
+  
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search for places..." autocomplete="off">
+      <div class="clear-button" id="clear-button"></div>
+      <div class="search-icon" id="search-button"></div>
+    </div>
+  </div>
+
   <div id="hover-tooltip"></div>
+  
   <script>
     /* =====================
        Constants
@@ -130,6 +240,9 @@
     let clickedFeature = null;
     let isClickInfoWindowOpen = false;
     let tooltip;
+    let placesService;
+    let geocoder;
+    let searchMarker;
 
     /* =====================
        Init Map
@@ -145,13 +258,155 @@
         isClickInfoWindowOpen = false;
         clickedFeature = null;
       });
+      
       tooltip = document.getElementById("hover-tooltip");
+      
+      // Initialize Places service and Geocoder
+      placesService = new google.maps.places.PlacesService(map);
+      geocoder = new google.maps.Geocoder();
       
       const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
 
       createToggleControls(map, npcLayer, estLayer);
       createLegend(map);
+      initializeSearch();
+    }
+
+    /* =====================
+       Search Functionality
+    ====================== */
+    function initializeSearch() {
+      const searchInput = document.getElementById('search-input');
+      const clearButton = document.getElementById('clear-button');
+      const searchButton = document.getElementById('search-button');
+
+      // Show/hide clear button
+      searchInput.addEventListener('input', function() {
+        clearButton.style.display = this.value ? 'block' : 'none';
+      });
+
+      // Clear search
+      clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        clearButton.style.display = 'none';
+        clearSearchMarker();
+        searchInput.focus();
+      });
+
+      // Search on Enter key
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          performSearch(this.value);
+        }
+      });
+
+      // Search on button click
+      searchButton.addEventListener('click', function() {
+        performSearch(searchInput.value);
+      });
+
+      // Initialize autocomplete
+      const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        fields: ['place_id', 'geometry', 'name', 'formatted_address'],
+        types: ['establishment', 'geocode']
+      });
+
+      autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          showSearchResult(place);
+        }
+      });
+    }
+
+    function performSearch(query) {
+      if (!query.trim()) return;
+
+      // Clear previous search marker
+      clearSearchMarker();
+
+      // First try Places API search
+      const request = {
+        query: query,
+        fields: ['place_id', 'geometry', 'name', 'formatted_address', 'types']
+      };
+
+      placesService.textSearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+          showSearchResult(results[0]);
+        } else {
+          // Fallback to Geocoding API
+          geocoder.geocode({ address: query }, (results, status) => {
+            if (status === google.maps.GeocoderStatus.OK && results[0]) {
+              const place = {
+                geometry: results[0].geometry,
+                name: results[0].formatted_address,
+                formatted_address: results[0].formatted_address
+              };
+              showSearchResult(place);
+            } else {
+              alert('Location not found. Please try a different search term.');
+            }
+          });
+        }
+      });
+    }
+
+    function showSearchResult(place) {
+      const location = place.geometry.location;
+      
+      // Create or update search marker
+      if (searchMarker) {
+        searchMarker.setMap(null);
+      }
+
+      searchMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        title: place.name || place.formatted_address,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        },
+        animation: google.maps.Animation.DROP
+      });
+
+      // Show info window for search result
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="max-width: 250px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${place.name || 'Search Result'}</h3>
+            <p style="margin: 0; font-size: 14px; color: #666;">${place.formatted_address || ''}</p>
+          </div>
+        `
+      });
+
+      searchMarker.addListener('click', () => {
+        infoWindow.open(map, searchMarker);
+      });
+
+      // Center map on result
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(location);
+        map.setZoom(15);
+      }
+
+      // Show info window immediately
+      infoWindow.open(map, searchMarker);
+    }
+
+    function clearSearchMarker() {
+      if (searchMarker) {
+        searchMarker.setMap(null);
+        searchMarker = null;
+      }
     }
 
     /* =====================
@@ -387,7 +642,7 @@
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       
-      const STEP = 25; // larger = more separation
+      const STEP = 25;
       const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
       
       return `hsl(${hue}, 70%, 55%)`;
@@ -406,11 +661,8 @@
       });
     
       if (count === 1) {
-        // Single point → center and set a default zoom
-        map.panTo(bounds.getCenter()); // smoothly moves the map center
-        // map.setZoom(10); // adjust zoom as needed
+        map.panTo(bounds.getCenter());
       } else {
-        // Polygon or multiple points → fit bounds
         map.fitBounds(bounds);
       }
     }
@@ -418,9 +670,9 @@
     window.initMap = initMap;
   </script>
 
-  <!-- Google Maps API -->
+  <!-- Google Maps API with Places library -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&callback=initMap&loading=async"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&libraries=places&callback=initMap&loading=async"
     async defer
   ></script>
 </body>
