@@ -166,10 +166,10 @@
     /* ---------- Mobile Responsive Design ---------- */
     @media (max-width: 768px) {
       .search-container {
-        width: calc(100% - 20px);
+        width: calc(100% - 160px); /* Leave space for filter box */
         max-width: none;
-        top: 80px; /* Move below filter box */
-        left: 10px;
+        top: 10px; /* Keep at same level as filter */
+        left: 150px; /* Position to the right of filter box */
         transform: none;
       }
     
@@ -182,7 +182,7 @@
         margin: 6px;
         padding: 8px;
         font-size: 13px;
-        max-width: 140px; /* Constrain filter box width */
+        width: 130px; /* Fixed width instead of max-width */
         box-sizing: border-box;
       }
     
@@ -218,25 +218,28 @@
     }
     
     @media (max-width: 600px) {
+      /* Stack vertically on smaller screens */
       .search-container {
         width: calc(100% - 20px);
         max-width: none;
-        top: 90px; /* Increase spacing */
+        top: 85px; /* Move below filter box */
         left: 10px;
+        transform: none;
       }
     
       .control-box {
         margin: 6px;
         padding: 8px;
         font-size: 12px;
-        max-width: 160px; /* Slightly wider for better readability */
+        width: auto; /* Allow natural width */
+        max-width: none;
       }
     }
     
     @media (max-width: 480px) {
       .search-container {
         width: calc(100% - 20px);
-        top: 95px; /* Further adjust spacing */
+        top: 90px;
         left: 10px;
       }
     
@@ -259,7 +262,8 @@
         margin: 6px;
         padding: 8px;
         font-size: 12px;
-        max-width: 180px; /* Allow more width on smaller screens */
+        width: auto;
+        max-width: none;
       }
     
       .color-box {
@@ -303,7 +307,7 @@
     @media (max-width: 360px) {
       .search-container {
         width: calc(100% - 16px);
-        top: 100px; /* Final adjustment for very small screens */
+        top: 95px;
         left: 8px;
       }
     
@@ -326,7 +330,8 @@
         margin: 6px;
         padding: 6px;
         font-size: 11px;
-        max-width: none; /* Allow full width on very small screens */
+        width: auto;
+        max-width: none;
       }
     
       .info-table {
