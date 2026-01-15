@@ -269,7 +269,6 @@
     let clickedFeature = null;
     let isClickInfoWindowOpen = false;
     let tooltip;
-    let placesService;
     let geocoder;
     let searchMarker;
 
@@ -290,8 +289,7 @@
       
       tooltip = document.getElementById("hover-tooltip");
       
-      // Initialize Places service and Geocoder
-      placesService = new google.maps.places.PlacesService(map);
+      // Initialize Geocoder
       geocoder = new google.maps.Geocoder();
       
       const npcLayer = createNpcLayer(map);
@@ -324,16 +322,15 @@
       });
 
       // Search on Enter key
-      searchInput.addEventListener('keypress', function(e) {
+      searchInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
-          performSearch(this.value);
+          e.preventDefault();
+          document.querySelector('.pac-item')?.click();
         }
       });
-
+      
       // Search on button click
-      searchButton.addEventListener('click', function() {
-        performSearch(searchInput.value);
-      });
+      
 
       // Initialize autocomplete
       const autocomplete = new google.maps.places.Autocomplete(searchInput, {
@@ -345,31 +342,6 @@
         const place = autocomplete.getPlace();
         if (place.geometry) {
           showSearchResult(place);
-        }
-      });
-    }
-
-    function performSearch(query) {
-      if (!query.trim()) return;
-
-      // Clear previous search marker
-      clearSearchMarker();
-
-      // First try Places API search
-      const request = {
-        query: query,
-        fields: ['name', 'geometry', 'formatted_address']
-      };
-
-      placesService.findPlaceFromQuery(request, (results, status) => {
-        if (
-          status === google.maps.places.PlacesServiceStatus.OK &&
-          results &&
-          results.length
-        ) {
-          showSearchResult(results[0]);
-        } else {
-          alert('Location not found. Try selecting from autocomplete.');
         }
       });
     }
