@@ -349,11 +349,7 @@
   <!-- Search Bar -->
   <div class="search-container">
     <div class="search-box">
-      <gmp-place-autocomplete
-        id="search-input"
-        placeholder="Search for places..."
-      >
-      </gmp-place-autocomplete>
+      <input type="text" id="search-input" placeholder="Search for places..." autocomplete="off">
       <div class="clear-button" id="clear-button"></div>
       <div class="search-icon" id="search-button"></div>
     </div>
@@ -368,22 +364,22 @@
     const MAP_CENTER = { lat: 1.3521, lng: 103.8198 };
     const NPC_GEOJSON_URL = "https://npc-boundary-geojson-proxy.seixiang232.workers.dev/";
     const EST_GEOJSON_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
-    
+
     const COLORS = {
       NPP: "#4CAF50",
       CLOSED: "#FFA500",
       DEFAULT: "#D32F2F"
     };
-    
+
     let map;
     let clickInfoWindow;
     let clickedFeature = null;
     let isClickInfoWindowOpen = false;
     let tooltip;
+    let placesService;
     let geocoder;
     let searchMarker;
-    let autocompleteEl;
-    
+
     /* =====================
        Init Map
     ====================== */
@@ -392,7 +388,7 @@
         center: MAP_CENTER,
         zoom: 11,
       });
-    
+
       clickInfoWindow = new google.maps.InfoWindow();
       clickInfoWindow.addListener("closeclick", () => {
         isClickInfoWindowOpen = false;
@@ -402,140 +398,97 @@
       tooltip = document.getElementById("hover-tooltip");
       
       // Initialize Places service and Geocoder
+      placesService = new google.maps.places.PlacesService(map);
       geocoder = new google.maps.Geocoder();
       
       const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
-    
+
       createToggleControls(map, npcLayer, estLayer);
       createLegend(map);
       initializeSearch();
     }
-    
+
     /* =====================
        Search Functionality
     ====================== */
     function initializeSearch() {
-      autocompleteEl = document.getElementById('search-input');
+      const searchInput = document.getElementById('search-input');
       const clearButton = document.getElementById('clear-button');
       const searchButton = document.getElementById('search-button');
-    
-      // Show/hide clear button based on input value
-      const checkInputValue = () => {
-        const hasValue = autocompleteEl.value && autocompleteEl.value.trim() !== '';
-        clearButton.style.display = hasValue ? 'block' : 'none';
-      };
-    
-      // Monitor input changes
-      autocompleteEl.addEventListener('input', checkInputValue);
-      
-      // Also check on focus in case value was set programmatically
-      autocompleteEl.addEventListener('focus', checkInputValue);
-    
+
+      // Show/hide clear button
+      searchInput.addEventListener('input', function() {
+        clearButton.style.display = this.value ? 'block' : 'none';
+      });
+
       // Clear search
       clearButton.addEventListener('click', function() {
-        autocompleteEl.value = '';
+        searchInput.value = '';
         clearButton.style.display = 'none';
         clearSearchMarker();
-        autocompleteEl.focus();
+        searchInput.focus();
       });
-    
+
       // Search on Enter key
-      autocompleteEl.addEventListener('keypress', function(e) {
+      searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-          e.preventDefault();
-          performSearch(autocompleteEl.value);
+          performSearch(this.value);
         }
       });
-      
+
       // Search on button click
       searchButton.addEventListener('click', function() {
-        performSearch(autocompleteEl.value);
+        performSearch(searchInput.value);
       });
-    
-      // Handle place selection from autocomplete
-      autocompleteEl.addEventListener('gmp-placeselect', async (e) => {
-        const place = e.place;
-      
-        await place.fetchFields({
-          fields: [
-            'displayName',
-            'formattedAddress',
-            'location',
-            'viewport'
-          ]
-        });
-        
-        showSearchResult({
-          name: place.displayName,
-          formatted_address: place.formattedAddress,
-          geometry: {
-            location: place.location,
-            viewport: place.viewport
-          }
-        });
-        
-        // Update clear button visibility
-        checkInputValue();
+
+      // Initialize autocomplete
+      const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        fields: ['place_id', 'geometry', 'name', 'formatted_address'],
+        types: ['establishment', 'geocode']
       });
-    }
-    
-    async function performSearch(query) {
-      if (!query || !query.trim()) return;
-    
-      clearSearchMarker();
-    
-      try {
-        // Use the new Places API (Text Search)
-        const request = {
-          textQuery: query,
-          fields: [
-            'displayName',
-            'formattedAddress',
-            'location',
-            'viewport'
-          ],
-          locationBias: map.getBounds()
-            ? { bounds: map.getBounds() }
-            : { center: MAP_CENTER, radius: 50000 } // 50km radius around Singapore
-        };
-    
-        const { places } = await google.maps.places.Place.searchByText(request);
-    
-        if (!places || !places.length) {
-          throw new Error('No places found');
+
+      autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          showSearchResult(place);
         }
-    
-        showSearchResult({
-          name: places[0].displayName,
-          formatted_address: places[0].formattedAddress,
-          geometry: {
-            location: places[0].location,
-            viewport: places[0].viewport
-          }
-        });
-    
-      } catch (err) {
-        console.log('Places API failed, falling back to Geocoder:', err);
-        // Fallback to Geocoder
-        geocoder.geocode({ 
-          address: query,
-          bounds: map.getBounds(),
-          region: 'sg' // Bias towards Singapore
-        }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            showSearchResult({
-              name: results[0].formatted_address,
-              formatted_address: results[0].formatted_address,
-              geometry: results[0].geometry
-            });
-          } else {
-            alert('Location not found. Please try a different search term.');
-          }
-        });
-      }
+      });
     }
-    
+
+    function performSearch(query) {
+      if (!query.trim()) return;
+
+      // Clear previous search marker
+      clearSearchMarker();
+
+      // First try Places API search
+      const request = {
+        query: query,
+        fields: ['place_id', 'geometry', 'name', 'formatted_address', 'types']
+      };
+
+      placesService.textSearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+          showSearchResult(results[0]);
+        } else {
+          // Fallback to Geocoding API
+          geocoder.geocode({ address: query }, (results, status) => {
+            if (status === google.maps.GeocoderStatus.OK && results[0]) {
+              const place = {
+                geometry: results[0].geometry,
+                name: results[0].formatted_address,
+                formatted_address: results[0].formatted_address
+              };
+              showSearchResult(place);
+            } else {
+              alert('Location not found. Please try a different search term.');
+            }
+          });
+        }
+      });
+    }
+
     function showSearchResult(place) {
       const location = place.geometry.location;
       
@@ -543,7 +496,7 @@
       if (searchMarker) {
         searchMarker.setMap(null);
       }
-    
+
       searchMarker = new google.maps.Marker({
         position: location,
         map: map,
@@ -558,7 +511,7 @@
         },
         animation: google.maps.Animation.DROP
       });
-    
+
       // Show info window for search result
       const infoWindow = new google.maps.InfoWindow({
         content: `
@@ -568,11 +521,11 @@
           </div>
         `
       });
-    
+
       searchMarker.addListener('click', () => {
         infoWindow.open(map, searchMarker);
       });
-    
+
       // Center map on result
       if (place.geometry.viewport) {
         map.fitBounds(place.geometry.viewport);
@@ -580,24 +533,24 @@
         map.setCenter(location);
         map.setZoom(15);
       }
-    
+
       // Show info window immediately
       infoWindow.open(map, searchMarker);
     }
-    
+
     function clearSearchMarker() {
       if (searchMarker) {
         searchMarker.setMap(null);
         searchMarker = null;
       }
     }
-    
+
     /* =====================
        Layers
     ====================== */
     function createNpcLayer(map) {
       const layer = new google.maps.Data({ map });
-    
+
       layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
         features.forEach(feature => {
           const npcName = feature.getProperty("NPC_NAME");
@@ -627,39 +580,39 @@
         clickInfoWindow.setPosition(e.latLng);
         clickInfoWindow.open(map);
         isClickInfoWindowOpen = true;
-    
+
         // Fit map to the clicked NPC boundary
         fitFeatureBounds(e.feature);
       });
-    
+
       layer.addListener("mouseover", e => {
         if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
         map.getDiv().style.cursor = "pointer";
         showTooltip(buildNpcHoverContent(e.feature), e);
       });
-    
+
       layer.addListener("mousemove", e => {
         if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
         moveTooltip(e);
       });
-    
+
       layer.addListener("mouseout", () => {
         map.getDiv().style.cursor = "";
         hideTooltip();
       });
-    
+
       return layer;
     }
-    
+
     function createEstablishmentLayer(map) {
       const layer = new google.maps.Data({ map });
-    
+
       layer.loadGeoJson(EST_GEOJSON_URL);
-    
+
       layer.setStyle(feature => ({
         icon: buildEstablishmentIcon(feature)
       }));
-    
+
       layer.addListener("click", e => {
         clickedFeature = e.feature;
         hideTooltip();
@@ -667,7 +620,7 @@
         clickInfoWindow.setPosition(e.latLng);
         clickInfoWindow.open(map);
         isClickInfoWindowOpen = true;
-    
+
         fitFeatureBounds(e.feature);
       });
       
@@ -681,10 +634,10 @@
         map.getDiv().style.cursor = "";
         hideTooltip();
       });
-    
+
       return layer;
     }
-    
+
     /* =====================
        UI Components
     ====================== */
@@ -696,15 +649,15 @@
         <label><input type="checkbox" checked /> NPC Boundaries</label><br />
         <label><input type="checkbox" checked /> NPP Locations</label>
       `;
-    
+
       const [npcToggle, estToggle] = div.querySelectorAll("input");
-    
+
       npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
       estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
-    
+
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
-    
+
     function createLegend(map) {
       const div = document.createElement("div");
       div.className = "control-box";
@@ -714,20 +667,20 @@
         <div class="legend-row"><span class="color-box closed"></span> NPP (Closed)</div>
         <div class="legend-row"><span class="color-box error"></span> Error</div>
       `;
-    
+
       map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(div);
     }
-    
+
     /* =====================
        Helpers
     ====================== */
     function buildEstablishmentIcon(feature) {
       const dept = feature.getProperty("DEPARTMENT") || "";
-    
+
       let color = COLORS.DEFAULT;
       if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
       if (dept.includes("Neighbourhood Police Post") && dept.includes("Closed")) color = COLORS.CLOSED;
-    
+
       return {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 8,
@@ -737,7 +690,7 @@
         strokeWeight: 1
       };
     }
-    
+
     function buildNpcContent(feature) {
       return buildTable("NPC Boundary Info", [
         ["OBJECTID", feature.getProperty("OBJECTID")],
@@ -748,7 +701,7 @@
         ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
-    
+
     function buildNpcHoverContent(feature) {
       return `
         <div class="info-window">
@@ -757,7 +710,7 @@
         </div>
       `;
     }
-    
+
     function buildEstContent(feature) {
       return buildTable("NPP Info", [
         ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
@@ -776,7 +729,7 @@
         ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
-    
+
     function buildEstHoverContent(feature) {
       return `
         <div class="info-window">
@@ -803,7 +756,7 @@
         </div>
       `;
     }
-    
+
     function showTooltip(html, e) {
       tooltip.innerHTML = html;
       tooltip.style.display = "block";
@@ -828,7 +781,7 @@
       const STEP = 25;
       const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
       
-      return `hsl(${hue}, 50%, 50%)`;
+      return `hsl(${hue}, 70%, 55%)`;
     }
     
     function fitFeatureBounds(feature) {
