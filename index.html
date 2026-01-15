@@ -164,7 +164,7 @@
     }
 
     /* ---------- Mobile Responsive Design ---------- */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .search-container {
         width: calc(100% - 160px); /* Leave space for filter box */
         max-width: none;
@@ -217,7 +217,7 @@
       }
     }
     
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       /* Stack vertically on smaller screens */
       .search-container {
         width: calc(100% - 20px);
@@ -304,7 +304,7 @@
       }
     }
     
-    @media (max-width: 360px) {
+    @media (max-width: 320px) {
       .search-container {
         width: calc(100% - 16px);
         top: 95px;
@@ -788,7 +788,7 @@
       const STEP = 25;
       const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
       
-      return `hsl(${hue}, 65%, 50%)`;
+      return `hsl(${hue}, 55%, 45%)`;
     }
     
     function fitFeatureBounds(feature) {
