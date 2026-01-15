@@ -5,215 +5,270 @@
   <title>Singapore Police NPC & NPP</title>
   <style>
     /* =====================
-       Base
+       CSS Custom Properties
     ====================== */
+    :root {
+      --primary-color: #4CAF50;
+      --warning-color: #FFA500;
+      --error-color: #D32F2F;
+      --search-color: #4285F4;
+      
+      --shadow-light: 0 2px 6px rgba(0, 0, 0, 0.15);
+      --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+      --shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
+      
+      --border-radius: 8px;
+      --border-radius-small: 6px;
+      
+      --font-size-base: 14px;
+      --font-size-small: 13px;
+      --font-size-xs: 12px;
+      
+      --spacing-xs: 4px;
+      --spacing-sm: 6px;
+      --spacing-md: 8px;
+      --spacing-lg: 10px;
+      --spacing-xl: 12px;
+      --spacing-xxl: 15px;
+    }
+    
+    /* =====================
+       Base & Reset
+    ====================== */
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: var(--font-size-base);
+      line-height: 1.4;
     }
-  
+    
     #map {
       height: 100vh;
       width: 100%;
     }
-  
+    
     /* =====================
-       Search Bar
+       Search Container
     ====================== */
     .search-container {
       position: absolute;
-      top: 10px;
+      top: var(--spacing-lg);
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
       width: 90%;
       max-width: 400px;
     }
-  
+    
     .search-box {
       position: relative;
       width: 100%;
     }
-  
-    /* ---- Place Autocomplete Element ---- */
+    
+    /* ---- Place Autocomplete Styling ---- */
     gmp-place-autocomplete {
       display: block;
       width: 100%;
     }
-  
+    
     gmp-place-autocomplete::part(input) {
       width: 100%;
-      padding: 12px 45px 12px 15px;
+      padding: var(--spacing-xl) 45px var(--spacing-xl) var(--spacing-xxl);
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: var(--border-radius);
+      font-size: 16px; /* Prevents zoom on iOS */
       background: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-medium);
       outline: none;
-      box-sizing: border-box;
+      transition: box-shadow 0.2s ease;
     }
-  
+    
     gmp-place-autocomplete::part(input):focus {
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow-heavy);
     }
-  
-    /* ---- Search & Clear Icons ---- */
-    .search-icon {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 20px;
-      height: 20px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>')
-        no-repeat center;
-      background-size: contain;
-      cursor: pointer;
-    }
-  
+    
+    /* ---- Search Icons ---- */
+    .search-icon,
     .clear-button {
       position: absolute;
-      right: 40px;
       top: 50%;
       transform: translateY(-50%);
       width: 20px;
       height: 20px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>')
-        no-repeat center;
-      background-size: contain;
       cursor: pointer;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      transition: opacity 0.2s ease;
+    }
+    
+    .search-icon:hover,
+    .clear-button:hover {
+      opacity: 0.7;
+    }
+    
+    .search-icon {
+      right: var(--spacing-xl);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>');
+    }
+    
+    .clear-button {
+      right: 40px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>');
       display: none;
     }
-  
+    
     /* =====================
-       Controls / Legend
+       Control Box & Legend
     ====================== */
     .control-box {
       background: #ffffff;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      padding: var(--spacing-lg);
+      margin: var(--spacing-lg);
+      border-radius: var(--border-radius-small);
+      font-size: var(--font-size-base);
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(10px);
     }
-  
+    
+    .control-box label {
+      display: block;
+      margin: var(--spacing-sm) 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .control-box input[type="checkbox"] {
+      margin-right: var(--spacing-sm);
+    }
+    
     .legend-row {
-      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      margin-top: var(--spacing-sm);
     }
-  
+    
     .color-box {
-      display: inline-block;
       width: 14px;
       height: 14px;
-      margin-right: 6px;
-      vertical-align: middle;
+      margin-right: var(--spacing-sm);
+      border-radius: 50%;
+      flex-shrink: 0;
     }
-  
-    .npp { background: #4CAF50; border-radius: 50%; }
-    .closed { background: #FFA500; border-radius: 50%; }
-    .error { background: #D32F2F; border-radius: 50%; }
-  
+    
+    .npp { background: var(--primary-color); }
+    .closed { background: var(--warning-color); }
+    .error { background: var(--error-color); }
+    
     /* =====================
-       Hover Tooltip
+       Tooltip
     ====================== */
     #hover-tooltip {
       position: absolute;
       pointer-events: none;
       max-width: 280px;
       background: rgba(255, 255, 255, 0.95);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 13px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--border-radius-small);
+      font-size: var(--font-size-small);
+      box-shadow: var(--shadow-light);
       display: none;
       z-index: 1000;
-      transform: translate(12px, 12px);
+      transform: translate(var(--spacing-xl), var(--spacing-xl));
+      backdrop-filter: blur(5px);
     }
-  
+    
     /* =====================
-       InfoWindow
+       Info Window
     ====================== */
     .info-window {
       max-height: 250px;
       max-width: 420px;
       overflow-y: auto;
-      font-size: 13px;
+      font-size: var(--font-size-small);
       white-space: normal;
     }
-  
+    
+    .info-window h1 {
+      margin: 0 0 var(--spacing-md) 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
     .info-table {
       width: 100%;
       min-width: 300px;
       border-collapse: collapse;
       table-layout: fixed;
     }
-  
+    
     .info-table td {
-      padding: 6px 8px;
+      padding: var(--spacing-sm) var(--spacing-md);
       border-bottom: 1px solid #eee;
       vertical-align: top;
+      word-wrap: break-word;
     }
-  
+    
     .info-table td:first-child {
-      font-weight: bold;
+      font-weight: 600;
       width: 120px;
+      color: #555;
     }
-  
+    
     .info-table tbody tr:nth-child(even) {
       background: #f9f9f9;
     }
-
-    /* ---------- Mobile Responsive Design ---------- */
+    
+    .info-table tbody tr:hover {
+      background: #f0f0f0;
+    }
+    
+    /* =====================
+       Responsive Design
+    ====================== */
     @media (max-width: 768px) {
       .search-container {
-        width: calc(100% - 140px); /* Reserve space for filter box */
+        width: calc(100% - 140px);
         max-width: 300px;
-        top: 70px; /* Move search bar below filter box */
-        left: 10px;
+        top: 70px;
+        left: var(--spacing-lg);
         transform: none;
       }
     
-      #search-input {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: 14px 45px 14px 15px;
-      }
-    
       .control-box {
-        margin: 6px;
-        padding: 8px;
-        font-size: 13px;
-        max-width: 120px; /* Fixed width for filter box */
-        box-sizing: border-box;
+        margin: var(--spacing-sm);
+        padding: var(--spacing-md);
+        font-size: var(--font-size-small);
+        max-width: 120px;
       }
     
       #hover-tooltip {
         max-width: calc(100vw - 40px);
-        font-size: 12px;
-        padding: 8px;
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-md);
       }
     
       .info-window {
         max-width: calc(100vw - 40px);
         max-height: 200px;
-        font-size: 12px;
+        font-size: var(--font-size-xs);
       }
     
       .info-table {
         min-width: 250px;
-        font-size: 12px;
+        font-size: var(--font-size-xs);
       }
     
       .info-table td:first-child {
         width: 100px;
       }
     
-      .info-table td:nth-child(2) {
-        max-width: 150px;
-      }
-    
-      .info-table th,
       .info-table td {
-        padding: 4px 6px;
+        padding: var(--spacing-xs) var(--spacing-sm);
       }
     }
     
@@ -221,27 +276,36 @@
       .search-container {
         width: calc(100% - 16px);
         max-width: none;
-        top: 70px; /* Move search bar below filter box */
-        left: 8px;
+        top: 70px;
+        left: var(--spacing-md);
       }
     
       .control-box {
-        margin: 4px;
-        padding: 6px;
-        font-size: 12px;
-        max-width: none; /* Allow full width when stacked */
+        margin: var(--spacing-xs);
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-xs);
+        max-width: none;
       }
     }
     
     @media (max-width: 480px) {
-      .search-container {
-        width: calc(100% - 16px);
-        top: 75px; /* Adjust for smaller filter box */
-        left: 8px;
+      :root {
+        --spacing-xs: 3px;
+        --spacing-sm: 4px;
+        --spacing-md: 6px;
+        --spacing-lg: 8px;
+        --spacing-xl: 10px;
+        --spacing-xxl: 12px;
       }
     
-      #search-input {
-        padding: 12px 40px 12px 12px;
+      .search-container {
+        width: calc(100% - 16px);
+        top: 75px;
+        left: var(--spacing-md);
+      }
+    
+      gmp-place-autocomplete::part(input) {
+        padding: var(--spacing-xl) 40px var(--spacing-xl) var(--spacing-xl);
         font-size: 16px;
       }
     
@@ -255,23 +319,17 @@
         right: 35px;
       }
     
-      .control-box {
-        margin: 4px;
-        padding: 6px;
-        font-size: 12px;
-      }
-    
       .color-box {
         width: 12px;
         height: 12px;
-        margin-right: 4px;
+        margin-right: var(--spacing-xs);
       }
     
       #hover-tooltip {
         max-width: calc(100vw - 20px);
         font-size: 11px;
-        padding: 6px;
-        transform: translate(8px, 8px);
+        padding: var(--spacing-sm);
+        transform: translate(var(--spacing-md), var(--spacing-md));
       }
     
       .info-window {
@@ -289,13 +347,8 @@
         width: 80px;
       }
     
-      .info-table td:nth-child(2) {
-        max-width: 120px;
-      }
-    
-      .info-table th,
       .info-table td {
-        padding: 3px 4px;
+        padding: 3px var(--spacing-xs);
       }
     }
     
@@ -303,12 +356,11 @@
       .search-container {
         width: calc(100% - 12px);
         top: 70px;
-        left: 6px;
+        left: var(--spacing-sm);
       }
     
-      #search-input {
-        padding: 10px 35px 10px 10px;
-        font-size: 16px;
+      gmp-place-autocomplete::part(input) {
+        padding: var(--spacing-lg) 35px var(--spacing-lg) var(--spacing-lg);
       }
     
       .search-icon,
@@ -335,9 +387,38 @@
       .info-table td:first-child {
         width: 70px;
       }
+    }
     
-      .info-table td:nth-child(2) {
-        max-width: 100px;
+    /* =====================
+       Performance Optimisations
+    ====================== */
+    .search-icon,
+    .clear-button,
+    .control-box,
+    #hover-tooltip {
+      will-change: transform;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* =====================
+       Print Styles
+    ====================== */
+    @media print {
+      .search-container,
+      .control-box,
+      #hover-tooltip {
+        display: none !important;
+      }
+      
+      #map {
+        height: 80vh !important;
       }
     }
   </style>
