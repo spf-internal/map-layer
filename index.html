@@ -149,8 +149,7 @@
         font-size: 16px;
         padding: 10px;
       }
-    
-      /* Controls & Legend */
+      
       .control-box {
         margin: 8px;
         padding: 12px;
@@ -160,14 +159,19 @@
       }
       
       .filter-control {
-        position: fixed !important; /* override Google Maps */
-        top: 140px !important;
+        position: fixed !important;
+        top: 120px !important;
         right: 8px;
         left: auto !important;
         margin: 0;
-        width: auto;
-        max-width: 70%;
+        padding: 6px 8px;
+        font-size: 13px;
+        max-width: 160px;
         z-index: 3000;
+      }
+      
+      .filter-control input[type="checkbox"] {
+        transform: scale(1.1);
       }
       
       .control-box label {
@@ -180,14 +184,12 @@
         margin-right: 6px;
       }
     
-      /* Legend color dots */
       .color-box {
         width: 18px;
         height: 18px;
         margin-right: 8px;
       }
     
-      /* Hover tooltip (mobile-safe size) */
       #hover-tooltip {
         max-width: calc(100vw - 24px);
         font-size: 14px;
@@ -196,7 +198,6 @@
         transform: translate(10px, 10px);
       }
     
-      /* InfoWindow container */
       .info-window {
         max-width: calc(100vw - 24px);
         max-height: 55vh;
@@ -204,7 +205,6 @@
         line-height: 1.4;
       }
     
-      /* Table becomes readable on phone */
       .info-table {
         width: 100%;
         min-width: unset;
@@ -226,7 +226,6 @@
         padding: 10px 8px;
       }
     
-      /* Headings inside InfoWindow */
       .info-window h1 {
         font-size: 18px;
         margin: 6px 0 10px;
