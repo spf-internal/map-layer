@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Google Maps Advanced Marker Autocomplete</title>
-
-  <!-- Google Maps JS API (Places + Advanced Markers) -->
+  <title>Singapore Police NPC & NPP</title>
+  <script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6"></script>
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&libraries=places,marker&v=weekly&loading=async&callback=initMap"
-    async
-    defer>
+    async defer>
   </script>
-  
   <style>
     html, body {
       margin: 0;
@@ -23,13 +20,14 @@
       height: 100%;
       width: 100%;
     }
-
+    
+    /* ---------- Search Bar ---------- */
     .search-container {
       position: absolute;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
+      z-index: 2000;
       width: 90%;
       max-width: 400px;
       background: white;
@@ -37,9 +35,157 @@
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-
+    
     gmp-place-autocomplete {
       width: 100%;
+    }
+
+    /* ---------- Controls ---------- */
+    .control-box {
+      background: #ffffff;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    .legend-row {
+      margin-top: 6px;
+    }
+    
+    .color-box {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    
+    .npp { background: #4CAF50; border-radius: 50%; }
+    .closed { background: #FFA500; border-radius: 50%; }
+    .error { background: #D32F2F; border-radius: 50%; }
+    
+    /* ---------- Hover Tooltip ---------- */
+    #hover-tooltip {
+      position: absolute;
+      pointer-events: none;
+      max-width: 280px;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      display: none;
+      z-index: 1000;
+      transform: translate(12px, 12px);
+      transition: opacity 0.12s ease;
+    }
+    
+    /* ---------- InfoWindow ---------- */
+    .info-window {
+      max-height: 250px;
+      max-width: 420px;
+      overflow-y: auto;
+      font-size: 13px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+    
+    .info-table {
+      width: 100%;
+      min-width: 300px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    
+    .info-table thead tr {
+      background: #f0f0f0;
+      position: sticky;
+      top: 0;
+    }
+    
+    .info-table th,
+    .info-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: top;
+    }
+    
+    .info-table td:first-child {
+      font-weight: bold;
+      width: 120px;
+    }
+    
+    .info-table td:nth-child(2) {
+      max-width: 280px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    .info-table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    /* ---------- Mobile Responsive Design ---------- */
+    @media (max-width: 1100px) {
+      .search-container {
+        width: calc(100% - 20px);
+        max-width: none;
+        top: 90px; /* Move below filter box */
+        left: 10px;
+        transform: none;
+      }
+      
+      .control-box {
+        margin: 6px;
+        padding: 8px;
+        font-size: 12px;
+        width: auto;
+        max-width: none;
+      }
+
+      .color-box {
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
+      }
+    
+      #hover-tooltip {
+        max-width: calc(100vw - 20px);
+        font-size: 11px;
+        padding: 6px;
+        transform: translate(8px, 8px);
+      }
+
+      .info-window {
+        max-width: calc(100vw - 20px);
+        max-height: 180px;
+        font-size: 11px;
+      }
+    
+      .info-table {
+        min-width: 200px;
+        font-size: 11px;
+      }
+    
+      .info-table td:first-child {
+        width: 80px;
+      }
+    
+      .info-table td:nth-child(2) {
+        max-width: 120px;
+      }
+    
+      .info-table th,
+      .info-table td {
+        padding: 3px 4px;
+      }
     }
   </style>
 </head>
@@ -49,29 +195,58 @@
   <div class="search-container">
     <gmp-place-autocomplete
       id="autocomplete"
-      placeholder="Search for a place"
+      placeholder="Search for a place..."
       country="sg">
     </gmp-place-autocomplete>
   </div>
-
   <!-- Map -->
   <div id="map"></div>
-
+  <div id="hover-tooltip"></div>
+  
   <script>
+    /* =====================
+       Constants
+    ====================== */
+    const MAP_CENTER = { lat: 1.3521, lng: 103.8198 };
+    const NPC_GEOJSON_URL = "https://npc-boundary-geojson-proxy.seixiang232.workers.dev/";
+    const EST_GEOJSON_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
+
+    const COLORS = {
+      NPP: "#4CAF50",
+      CLOSED: "#FFA500",
+      DEFAULT: "#D32F2F"
+    };
+    
     let map;
     let marker;
+    let clickInfoWindow;
+    let clickedFeature = null;
+    let isClickInfoWindowOpen = false;
+    let tooltip;
 
+    /* =====================
+       Init Map
+    ====================== */
     window.initMap = () => {
-      const initialPosition = { lat: 1.3521, lng: 103.8198 }; // Singapore
-
       map = new google.maps.Map(document.getElementById("map"), {
-        center: initialPosition,
+        center: MAP_CENTER,
         zoom: 12,
         mapId: "1965133852f3b853c479e261" // REQUIRED for Advanced Markers
       });
-
+      clickInfoWindow = new google.maps.InfoWindow();
+      tooltip = document.getElementById("hover-tooltip");
+      const npcLayer = createNpcLayer(map);
+      const estLayer = createEstablishmentLayer(map);
       const autocomplete = document.getElementById("autocomplete");
 
+      createToggleControls(map, npcLayer, estLayer);
+      createLegend(map);
+      
+      clickInfoWindow.addListener("closeclick", () => {
+        isClickInfoWindowOpen = false;
+        clickedFeature = null;
+      });
+      
       autocomplete.addEventListener("gmp-select", async (event) => {
         const place = await event.placePrediction.toPlace();
         if (!place) return;
@@ -99,6 +274,264 @@
         }
       });
     };
+
+    /* =====================
+       Layers
+    ====================== */
+    function createNpcLayer(map) {
+      const layer = new google.maps.Data({ map });
+
+      layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
+        features.forEach(feature => {
+          const npcName = feature.getProperty("NPC_NAME");
+          
+          // Remove features that do NOT have NPC_NAME
+          if (!npcName || npcName.trim() === "") {
+            layer.remove(feature);
+          }
+        });
+      });
+      
+      layer.setStyle(feature => {
+        const name = feature.getProperty("NPC_NAME");
+        
+        return {
+          fillColor: stringToColor(name),
+          fillOpacity: 0.55,
+          strokeColor: "#333333",
+          strokeWeight: 1.5
+        };
+      });
+      
+      layer.addListener("click", e => {
+        clickedFeature = e.feature;
+        hideTooltip();
+        clickInfoWindow.setContent(buildNpcContent(e.feature));
+        clickInfoWindow.setPosition(e.latLng);
+        clickInfoWindow.open(map);
+        isClickInfoWindowOpen = true;
+
+        // Fit map to the clicked NPC boundary
+        fitFeatureBounds(e.feature);
+      });
+
+      layer.addListener("mouseover", e => {
+        if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
+        map.getDiv().style.cursor = "pointer";
+        showTooltip(buildNpcHoverContent(e.feature), e);
+      });
+
+      layer.addListener("mousemove", e => {
+        if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
+        moveTooltip(e);
+      });
+
+      layer.addListener("mouseout", () => {
+        map.getDiv().style.cursor = "";
+        hideTooltip();
+      });
+
+      return layer;
+    }
+
+    function createEstablishmentLayer(map) {
+      const layer = new google.maps.Data({ map });
+
+      layer.loadGeoJson(EST_GEOJSON_URL);
+
+      layer.setStyle(feature => ({
+        icon: buildEstablishmentIcon(feature)
+      }));
+
+      layer.addListener("click", e => {
+        clickedFeature = e.feature;
+        hideTooltip();
+        clickInfoWindow.setContent(buildEstContent(e.feature));
+        clickInfoWindow.setPosition(e.latLng);
+        clickInfoWindow.open(map);
+        isClickInfoWindowOpen = true;
+
+        fitFeatureBounds(e.feature);
+      });
+      
+      layer.addListener("mouseover", e => {
+        if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
+        map.getDiv().style.cursor = "pointer";
+        showTooltip(buildEstHoverContent(e.feature), e);
+      });
+      
+      layer.addListener("mouseout", () => {
+        map.getDiv().style.cursor = "";
+        hideTooltip();
+      });
+
+      return layer;
+    }
+
+    /* =====================
+       UI Components
+    ====================== */
+    function createToggleControls(map, npcLayer, estLayer) {
+      const div = document.createElement("div");
+      div.className = "control-box";
+      div.innerHTML = `
+        <b>Filter</b><br />
+        <label><input type="checkbox" checked /> NPC Boundaries</label><br />
+        <label><input type="checkbox" checked /> NPP Locations</label>
+      `;
+
+      const [npcToggle, estToggle] = div.querySelectorAll("input");
+
+      npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+      estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
+    }
+
+    function createLegend(map) {
+      const div = document.createElement("div");
+      div.className = "control-box";
+      div.innerHTML = `
+        <b>Legend</b>
+        <div class="legend-row"><span class="color-box npp"></span> NPP (Open)</div>
+        <div class="legend-row"><span class="color-box closed"></span> NPP (Closed)</div>
+        <div class="legend-row"><span class="color-box error"></span> Error</div>
+      `;
+
+      map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(div);
+    }
+    
+    /* =====================
+       Helper Functions
+    ====================== */
+    function buildEstablishmentIcon(feature) {
+      const dept = feature.getProperty("DEPARTMENT") || "";
+
+      let color = COLORS.DEFAULT;
+      if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
+      if (dept.includes("Neighbourhood Police Post") && dept.includes("Closed")) color = COLORS.CLOSED;
+
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: "#ffffff",
+        strokeWeight: 1
+      };
+    }
+
+    function buildNpcContent(feature) {
+      return buildTable("NPC Boundary Info", [
+        ["OBJECTID", feature.getProperty("OBJECTID")],
+        ["NPC_NAME", feature.getProperty("NPC_NAME")],
+        ["DIVISION", feature.getProperty("DIVISION")],
+        ["DIV", feature.getProperty("DIV")],
+        ["INC_CRC", feature.getProperty("INC_CRC")],
+        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
+      ]);
+    }
+
+    function buildNpcHoverContent(feature) {
+      return `
+        <div class="info-window">
+          <b>${feature.getProperty("NPC_NAME") || "Error"}</b><br/>
+          ${feature.getProperty("DIV") || "NIL"} Division
+        </div>
+      `;
+    }
+
+    function buildEstContent(feature) {
+      return buildTable("NPP Info", [
+        ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
+        ["DEPARTMENT", feature.getProperty("DEPARTMENT")],
+        ["TYPE", feature.getProperty("TYPE")],
+        ["OPERATING_HOURS", feature.getProperty("OPERATING_HOURS")],
+        ["TELEPHONE", feature.getProperty("TELEPHONE")],
+        ["ALT_TELEPHONE_LINE", feature.getProperty("ALT_TELEPHONE_LINE")],
+        ["BUILDING_NAME", feature.getProperty("BUILDING_NAME")],
+        ["HSE_BLK_NO", feature.getProperty("HSE_BLK_NO")],
+        ["UNIT", feature.getProperty("UNIT")],
+        ["STREET_NAME", feature.getProperty("STREET_NAME")],
+        ["POSTAL_CODE", feature.getProperty("POSTAL_CODE")],
+        ["FAX", feature.getProperty("FAX")],
+        ["INC_CRC", feature.getProperty("INC_CRC")],
+        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
+      ]);
+    }
+
+    function buildEstHoverContent(feature) {
+      return `
+        <div class="info-window">
+          <b>${feature.getProperty("DEPARTMENT") || "Error"}</b><br/>
+          Operating Hours: ${feature.getProperty("OPERATING_HOURS") || "NIL"}
+        </div>
+      `;
+    }
+
+    function buildTable(title, rows) {
+      return `
+        <div class="info-window">
+          <u><h1>${title}:</h1></u>
+          <table class="info-table">
+            <tbody>
+              ${rows.map(([k, v]) => `
+                <tr>
+                  <td>${k}</td>
+                  <td>${v || "NIL"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function showTooltip(html, e) {
+      tooltip.innerHTML = html;
+      tooltip.style.display = "block";
+      moveTooltip(e);
+    }
+    
+    function moveTooltip(e) {
+      tooltip.style.left = e.domEvent.clientX + "px";
+      tooltip.style.top = e.domEvent.clientY + "px";
+    }
+    
+    function hideTooltip() {
+      tooltip.style.display = "none";
+    }
+    
+    function stringToColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      
+      const STEP = 25;
+      const hue = (Math.abs(hash) % (360 / STEP)) * STEP;
+      
+      return `hsl(${hue}, 60%, 60%)`;
+    }
+
+    function fitFeatureBounds(feature) {
+      const geometry = feature.getGeometry();
+      if (!geometry) return;
+    
+      const bounds = new google.maps.LatLngBounds();
+      let count = 0;
+    
+      geometry.forEachLatLng(latLng => {
+        bounds.extend(latLng);
+        count++;
+      });
+    
+      if (count === 1) {
+        map.panTo(bounds.getCenter());
+      } else {
+        map.fitBounds(bounds);
+      }
+    }
   </script>
 </body>
 </html>
