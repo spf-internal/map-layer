@@ -69,11 +69,6 @@
         mapId: "1965133852f3b853c479e261" // REQUIRED for Advanced Markers
       });
 
-      marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: null
-      });
-
       const autocomplete = document.getElementById("autocomplete");
 
       autocomplete.addEventListener("gmp-placeselect", async (event) => {
@@ -86,11 +81,20 @@
         });
       
         if (!place.location) return;
-      
-        map.panTo(place.location);
+        
+        // Move map
+        map.setCenter(place.location);
         map.setZoom(16);
-      
-        marker.position = place.location;
+        
+        // ✅ Create marker ONLY on first selection
+        if (!marker) {
+          marker = new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: place.location
+          });
+        } else {
+          marker.position = place.location;
+        }
       });
     };
   </script>
