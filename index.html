@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Singapore Police NPC & NPP</title>
   <script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6"></script>
   <script
@@ -134,58 +135,90 @@
     }
 
     /* ---------- Mobile Responsive Design ---------- */
-    @media (max-width: 1100px) {
+    @media (max-width: 768px) {
       .search-container {
-        width: calc(100% - 20px);
+        width: calc(100% - 16px);
         max-width: none;
-        top: 90px; /* Move below filter box */
-        left: 10px;
+        top: 12px;
+        left: 8px;
         transform: none;
+        border-radius: 10px;
       }
-      
+    
+      gmp-place-autocomplete {
+        font-size: 16px;
+        padding: 10px;
+      }
+    
+      /* Controls & Legend */
       .control-box {
-        margin: 6px;
-        padding: 8px;
-        font-size: 12px;
-        width: auto;
-        max-width: none;
+        margin: 8px;
+        padding: 12px;
+        font-size: 16px;
+        line-height: 1.4;
+        border-radius: 10px;
       }
-
+    
+      .control-box label {
+        display: block;
+        margin-top: 6px;
+      }
+    
+      .control-box input[type="checkbox"] {
+        transform: scale(1.4);
+        margin-right: 6px;
+      }
+    
+      /* Legend color dots */
       .color-box {
-        width: 12px;
-        height: 12px;
-        margin-right: 4px;
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
       }
     
+      /* Hover tooltip (mobile-safe size) */
       #hover-tooltip {
-        max-width: calc(100vw - 20px);
-        font-size: 11px;
-        padding: 6px;
-        transform: translate(8px, 8px);
-      }
-
-      .info-window {
-        max-width: calc(100vw - 20px);
-        max-height: 180px;
-        font-size: 11px;
+        max-width: calc(100vw - 24px);
+        font-size: 14px;
+        padding: 10px;
+        border-radius: 10px;
+        transform: translate(10px, 10px);
       }
     
+      /* InfoWindow container */
+      .info-window {
+        max-width: calc(100vw - 24px);
+        max-height: 55vh;
+        font-size: 15px;
+        line-height: 1.4;
+      }
+    
+      /* Table becomes readable on phone */
       .info-table {
-        min-width: 200px;
-        font-size: 11px;
+        width: 100%;
+        min-width: unset;
+        font-size: 15px;
       }
     
       .info-table td:first-child {
-        width: 80px;
+        width: 40%;
+        font-weight: bold;
       }
     
       .info-table td:nth-child(2) {
-        max-width: 120px;
+        width: 60%;
+        word-break: break-word;
       }
     
       .info-table th,
       .info-table td {
-        padding: 3px 4px;
+        padding: 10px 8px;
+      }
+    
+      /* Headings inside InfoWindow */
+      .info-window h1 {
+        font-size: 18px;
+        margin: 6px 0 10px;
       }
     }
   </style>
