@@ -281,7 +281,7 @@
     window.initMap = () => {
       map = new google.maps.Map(document.getElementById("map"), {
         center: MAP_CENTER,
-        zoom: isMobile() ? 11 : 12, // 👈 slightly zoomed out on mobile
+        zoom: isMobile() ? 10 : 12, // 👈 slightly zoomed out on mobile
         mapId: "1965133852f3b853c479e261" // REQUIRED for Advanced Markers
       });
       clickInfoWindow = new google.maps.InfoWindow();
