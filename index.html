@@ -72,7 +72,8 @@
       const autocomplete = document.getElementById("autocomplete");
 
       autocomplete.addEventListener("gmp-select", async (event) => {
-        const place = await placePrediction.toPlace();
+        const place = event.place;
+        console.log(place);
         if (!place) return;
         
         // 🔑 REQUIRED for Places API (New)
