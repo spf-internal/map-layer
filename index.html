@@ -139,7 +139,7 @@
       .search-container {
         width: calc(100% - 16px);
         max-width: none;
-        top: 30px;
+        top: 50px;
         left: 8px;
         transform: none;
         border-radius: 10px;
@@ -161,7 +161,7 @@
       
       .filter-control {
         position: fixed !important;     /* override Google Maps */
-        top: 72px;                      /* just below search bar */
+        top: 200px;                      /* just below search bar */
         right: 8px;
         left: auto !important;
         margin: 0;
@@ -281,7 +281,7 @@
     window.initMap = () => {
       map = new google.maps.Map(document.getElementById("map"), {
         center: MAP_CENTER,
-        zoom: 12,
+        zoom: isMobile() ? 10 : 12, // 👈 slightly zoomed out on mobile
         mapId: "1965133852f3b853c479e261" // REQUIRED for Advanced Markers
       });
       clickInfoWindow = new google.maps.InfoWindow();
@@ -292,6 +292,11 @@
 
       createToggleControls(map, npcLayer, estLayer);
       createLegend(map);
+
+      // Fix mobile initial render
+      google.maps.event.addListenerOnce(map, "idle", () => {
+        google.maps.event.trigger(map, "resize");
+      });
       
       clickInfoWindow.addListener("closeclick", () => {
         isClickInfoWindowOpen = false;
@@ -582,6 +587,10 @@
       } else {
         map.fitBounds(bounds);
       }
+    }
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 1100px)").matches;
     }
   </script>
 </body>
