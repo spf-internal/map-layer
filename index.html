@@ -72,16 +72,18 @@
       const autocomplete = document.getElementById("autocomplete");
 
       autocomplete.addEventListener("gmp-select", async (event) => {
-        console.log("event:", event);
-        console.log("event.place:", event.placePrediction.toPlace());
+        const place = await event.placePrediction.toPlace();
+        if (!place) return;
         
-        const place = event.place;
         await place.fetchFields({
-          fields: ["location"]
+          fields: ["location", "displayName", "formattedAddress"]
         });
       
         if (!place.location) return;
-        console.log("Working...")
+        console.log("Place object:", place);
+        console.log("Name:", place.displayName);
+        console.log("Address:", place.formattedAddress);
+        console.log("LatLng:", place.location.toJSON());
         // Move map
         map.setCenter(place.location);
         map.setZoom(16);
