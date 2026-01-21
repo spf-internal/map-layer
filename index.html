@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Singapore Police NPC & NPP</title>
+  <script>
+    // Simple client-side password protection
+    (function() {
+        const correctPassword = "1234";
+        const enteredPassword = prompt("Please enter the password to access this page:");
+        
+        if (enteredPassword !== correctPassword) {
+            alert("Incorrect password. Access denied.");
+            document.body.innerHTML = "<h1>Access Denied</h1><p>You do not have permission to view this page.</p>";
+            return;
+        }
+    })();
+  </script>
   <script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6"></script>
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRHYlg2978t2LjP6o4mirP3kUD_GylLgA&libraries=places,marker&v=weekly&loading=async&callback=initMap"
