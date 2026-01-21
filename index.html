@@ -341,7 +341,7 @@
         isClickInfoWindowOpen = true;
 
         // Fit map to the clicked NPC boundary
-        fitFeatureBounds(e.feature);
+        fitFeatureBounds(e.feature, e);
       });
 
       layer.addListener("mouseover", e => {
@@ -380,7 +380,7 @@
         clickInfoWindow.open(map);
         isClickInfoWindowOpen = true;
 
-        fitFeatureBounds(e.feature);
+        fitFeatureBounds(e.feature, e);
       });
       
       layer.addListener("mouseover", e => {
@@ -543,7 +543,7 @@
       return `hsl(${hue}, 60%, 60%)`;
     }
     
-    function fitFeatureBounds(feature) {
+    function fitFeatureBounds(feature, event) {
       const geometry = feature.getGeometry();
       if (!geometry) return;
       
@@ -565,8 +565,10 @@
       } else {
         if (event && event.latLng) {
           targetPosition = event.latLng;
+          console.log("zoom in on click");
         } else {
           targetPosition = bounds.getCenter();
+          console.log("zoom in on bounds");
         }
         
         targetZoom = isMobileDevice ? 14 : 15;
