@@ -542,27 +542,40 @@
       
       return `hsl(${hue}, 60%, 60%)`;
     }
-
+    
     function fitFeatureBounds(feature) {
       const geometry = feature.getGeometry();
       if (!geometry) return;
-    
+      
       const bounds = new google.maps.LatLngBounds();
+      const isMobileDevice = isMobile();
+      let targetPosition;
+      let targetZoom;
       let count = 0;
-    
+      
       geometry.forEachLatLng(latLng => {
         bounds.extend(latLng);
         count++;
       });
-    
+      
       if (count === 1) {
-        map.panTo(bounds.getCenter());
+        // Single point (NPP locations)
+        targetPosition = bounds.getCenter();
+        targetZoom = isMobileDevice ? 16 : 17;
       } else {
-        map.fitBounds(bounds);
-        map.panTo(bounds.getCenter());
+        if (event && event.latLng) {
+          targetPosition = event.latLng;
+        } else {
+          targetPosition = bounds.getCenter();
+        }
+        
+        targetZoom = isMobileDevice ? 14 : 15;
       }
+      
+      map.panTo(targetPosition);
+      map.setZoom(targetZoom);
     }
-
+    
     function isMobile() {
       return window.matchMedia("(max-width: 1100px)").matches;
     }
