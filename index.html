@@ -272,14 +272,16 @@
       fillColor: stringToColor(feature.getProperty("NPC_NAME")),
       fillOpacity: 0.55,
       strokeColor: "#333333",
-      strokeWeight: 1.5
+      strokeWeight: 1.5,
+      zIndex: 1
     });
     
     const NPC_ACTIVE_STYLE = feature => ({
       fillColor: stringToColor(feature.getProperty("NPC_NAME")),
       fillOpacity: 0.55,          // optional: slightly stronger fill
       strokeColor: "#ffffff",     // white border
-      strokeWeight: 3             // tighter / more prominent border
+      strokeWeight: 3,             // tighter / more prominent border
+      zIndex: 999   // 🔥 always on top
     });
     
     let map;
