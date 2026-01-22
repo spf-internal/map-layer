@@ -288,6 +288,7 @@
     let marker;
     let clickInfoWindow;
     let clickedFeature = null;
+    let clickedLayer = null;
     let isClickInfoWindowOpen = false;
     let isNppClicked = false;
     let tooltip;
@@ -306,10 +307,10 @@
       const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
       const autocomplete = document.getElementById("autocomplete");
-
+      
       createToggleControls(map, npcLayer, estLayer);
       createLegend(map);
-
+      
       // Fix mobile initial render
       google.maps.event.addListenerOnce(map, "idle", () => {
         google.maps.event.trigger(map, "resize");
@@ -318,11 +319,11 @@
       clickInfoWindow.addListener("closeclick", () => {
         if (clickedFeature) {
           if (isNppClicked) {
-            layer.overrideStyle(e.feature, {
+            clickedLayer.overrideStyle(e.feature, {
               icon: buildEstablishmentActiveIcon(e.feature)
             });
           } else {
-            layer.overrideStyle(e.feature, NPC_NORMAL_STYLE(e.feature));
+            clickedLayer.overrideStyle(e.feature, NPC_NORMAL_STYLE(e.feature));
           }
         }
         
@@ -380,6 +381,7 @@
       layer.addListener("click", e => {
         isNppClicked = false;
         clickedFeature = e.feature;
+        clickedLayer = layer;
         layer.overrideStyle(e.feature, NPC_ACTIVE_STYLE(e.feature));
         hideTooltip();
         clickInfoWindow.setContent(buildNpcContent(e.feature));
@@ -430,6 +432,7 @@
       layer.addListener("click", e => {
         isNppClicked = true;
         clickedFeature = e.feature;
+        clickedLayer = layer;
         layer.overrideStyle(e.feature, {
           icon: buildEstablishmentActiveIcon(e.feature)
         });
@@ -513,7 +516,7 @@
         scale: 10,
         fillColor: color,
         fillOpacity: 1,
-        strokeColor: "#333333",
+        strokeColor: "#ffffff",
         strokeWeight: 1,
         zIndex: 1
       };
