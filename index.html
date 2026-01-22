@@ -319,11 +319,11 @@
       clickInfoWindow.addListener("closeclick", () => {
         if (clickedFeature) {
           if (isNppClicked) {
-            clickedLayer.overrideStyle(e.feature, {
-              icon: buildEstablishmentActiveIcon(e.feature)
+            clickedLayer.overrideStyle(clickedFeature, {
+              icon: buildEstablishmentActiveIcon(clickedFeature)
             });
           } else {
-            clickedLayer.overrideStyle(e.feature, NPC_NORMAL_STYLE(e.feature));
+            clickedLayer.overrideStyle(clickedFeature, NPC_NORMAL_STYLE(clickedFeature));
           }
         }
         
