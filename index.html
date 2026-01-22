@@ -21,12 +21,10 @@
         const enteredPassword = prompt("Please enter the password to access this page:");
         
         if (enteredPassword === correctPassword) {
-          alert("Password correct. Access granted.");
-          document.body.innerHTML = "<h1>Welcome</h1>";
+          alert("Password Correct. Access Granted.");
           loadGoogleMaps(); // ✅ load map ONLY now
         } else {
-          alert("Incorrect password. Access Denied.");
-          document.body.innerHTML = "<h1>Access Denied</h1>";
+          alert("Incorrect Password. Access Denied.");
           promptPassword();
         }
       }
