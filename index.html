@@ -379,6 +379,10 @@
       layer.setStyle(NPC_NORMAL_STYLE);
       
       layer.addListener("click", e => {
+        if (clickedFeature) {
+          layer.overrideStyle(clickedFeature, NPC_NORMAL_STYLE(clickedFeature));
+        }
+        
         isNppClicked = false;
         clickedFeature = e.feature;
         clickedLayer = layer;
@@ -432,6 +436,12 @@
       }));
 
       layer.addListener("click", e => {
+        if (clickedFeature) {
+          layer.overrideStyle(clickedFeature, {
+            icon: buildEstablishmentIcon(clickedFeature)
+          });
+        }
+        
         isNppClicked = true;
         clickedFeature = e.feature;
         clickedLayer = layer;
