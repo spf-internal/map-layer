@@ -9,92 +9,28 @@
     (function() {
         const correctPassword = "1234";
         
-        // Create password modal
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            font-family: Arial, sans-serif;
-        `;
+        // Create a simple password input
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'password';
+        passwordInput.placeholder = 'Enter password';
+        passwordInput.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; padding: 10px; font-size: 16px;';
         
-        const passwordBox = document.createElement('div');
-        passwordBox.style.cssText = `
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            min-width: 300px;
-        `;
+        document.body.appendChild(passwordInput);
+        document.body.style.filter = 'blur(5px)'; // Blur the background
         
-        passwordBox.innerHTML = `
-            <h3 style="margin-top: 0; color: #333;">Enter Password</h3>
-            <input type="password" id="passwordInput" placeholder="Password" 
-                   style="padding: 10px; font-size: 16px; border: 2px solid #ddd; 
-                          border-radius: 5px; width: 200px; margin: 10px 0;">
-            <br>
-            <button id="submitBtn" style="padding: 10px 20px; font-size: 16px; 
-                                         background: #007cba; color: white; border: none; 
-                                         border-radius: 5px; cursor: pointer; margin: 5px;">
-                Submit
-            </button>
-            <button id="cancelBtn" style="padding: 10px 20px; font-size: 16px; 
-                                         background: #666; color: white; border: none; 
-                                         border-radius: 5px; cursor: pointer; margin: 5px;">
-                Cancel
-            </button>
-            <div id="errorMsg" style="color: red; margin-top: 10px; display: none;">
-                Incorrect password. Please try again.
-            </div>
-        `;
-        
-        modal.appendChild(passwordBox);
-        document.body.appendChild(modal);
-        
-        const passwordInput = document.getElementById('passwordInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const errorMsg = document.getElementById('errorMsg');
-        
-        // Focus on input
         passwordInput.focus();
         
-        function checkPassword() {
-            const enteredPassword = passwordInput.value;
-            
-            if (enteredPassword === correctPassword) {
-                document.body.removeChild(modal);
-            } else {
-                errorMsg.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        }
-        
-        function denyAccess() {
-            document.body.innerHTML = "<h1>Access Denied</h1><p>You do not have permission to view this page.</p>";
-        }
-        
-        submitBtn.addEventListener('click', checkPassword);
-        cancelBtn.addEventListener('click', denyAccess);
-        
-        // Allow Enter key to submit
         passwordInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                checkPassword();
+                if (passwordInput.value === correctPassword) {
+                    document.body.removeChild(passwordInput);
+                    document.body.style.filter = 'none';
+                } else {
+                    alert("Incorrect password. Access denied.");
+                    document.body.innerHTML = "<h1>Access Denied</h1><p>You do not have permission to view this page.</p>";
+                }
             }
         });
-        
-        // Prevent access to page content until password is entered
-        document.body.style.overflow = 'hidden';
     })();
   </script>
   <script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6"></script>
