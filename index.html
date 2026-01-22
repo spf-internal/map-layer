@@ -320,7 +320,7 @@
         if (clickedFeature) {
           if (isNppClicked) {
             clickedLayer.overrideStyle(clickedFeature, {
-              icon: buildEstablishmentActiveIcon(clickedFeature)
+              icon: buildEstablishmentIcon(clickedFeature)
             });
           } else {
             clickedLayer.overrideStyle(clickedFeature, NPC_NORMAL_STYLE(clickedFeature));
@@ -403,7 +403,9 @@
 
       layer.addListener("mousemove", e => {
         if (e.feature === clickedFeature && isClickInfoWindowOpen) return;
-        
+
+        map.getDiv().style.cursor = "pointer";
+        layer.overrideStyle(e.feature, NPC_ACTIVE_STYLE(e.feature));
         moveTooltip(e);
       });
 
