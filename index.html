@@ -243,13 +243,13 @@
 
 <body>
   <!-- Search -->
-  <div class="search-container">
+  <!-- <div class="search-container">
     <gmp-place-autocomplete
       id="autocomplete"
       placeholder="Search for a place..."
       country="sg">
     </gmp-place-autocomplete>
-  </div>
+  </div> -->
   <!-- Map -->
   <div id="map"></div>
   <div id="hover-tooltip"></div>
@@ -306,7 +306,7 @@
       tooltip = document.getElementById("hover-tooltip");
       const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
-      const autocomplete = document.getElementById("autocomplete");
+      const autocomplete = createSearchControls(map);
       
       createToggleControls(map, npcLayer, estLayer);
       createLegend(map);
@@ -483,6 +483,21 @@
     /* =====================
        UI Components
     ====================== */
+    function createSearchControls(map) {
+      const div = document.createElement("div");
+      div.className = "search-container";
+      div.innerHTML = `
+        <gmp-place-autocomplete
+          id="autocomplete"
+          placeholder="Search for a place..."
+          country="sg">
+        </gmp-place-autocomplete>
+      `;
+      
+      map.controls[google.maps.ControlPosition.TOP_CENTER].push(div);
+      return document.getElementById("autocomplete");
+    }
+    
     function createToggleControls(map, npcLayer, estLayer) {
       const div = document.createElement("div");
       div.className = "control-box filter-control";
