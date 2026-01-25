@@ -242,17 +242,18 @@
 </head>
 
 <body>
-  <!-- Search -->
-  <div class="search-container">
-    <gmp-place-autocomplete
-      id="autocomplete"
-      placeholder="Search for a place..."
-      country="sg">
-    </gmp-place-autocomplete>
-  </div>
   <!-- Map -->
-  <div id="map"></div>
-  <div id="hover-tooltip"></div>
+  <div id="map">
+    <!-- Search -->
+    <div class="search-container">
+      <gmp-place-autocomplete
+        id="autocomplete"
+        placeholder="Search for a place..."
+        country="sg">
+      </gmp-place-autocomplete>
+    </div>
+    <div id="hover-tooltip"></div>
+  </div>
   
   <script>
     /* =====================
