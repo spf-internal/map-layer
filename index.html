@@ -380,7 +380,6 @@
           // Store unique DIVISION values
           if (division && !uniqueDivisions.has(division)) {
             uniqueDivisions.add(division);
-            console.log(division)
           }
         });
       });
@@ -501,8 +500,7 @@
       
       // Build division list HTML
       const divisionHtml = divisions
-        .map(d => `<label><input type="checkbox" /> ${d}</label>`)
-        .join("<br />");
+        .map(d => `<label><input type="checkbox" checked /> ${d} Division</label><br />`)
       
       div.innerHTML = `
         <b>Filter</b><br />
