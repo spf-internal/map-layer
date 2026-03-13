@@ -500,10 +500,11 @@
       uniqueDivisions = uniqueDivisions.sort();
       console.log(uniqueDivisions)
       
-      // Build division list HTML
       const divisionHtml = uniqueDivisions
         .map(d => `<label><input type="checkbox" checked /> ${d} Division</label>`)
-        .join("<br />");
+        .join(`<br />`);
+
+      console.log(divisionHtml);
       
       div.innerHTML = `
         <b>Filter</b><br />
