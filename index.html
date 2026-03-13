@@ -322,9 +322,12 @@
       });
       clickInfoWindow = new google.maps.InfoWindow();
       tooltip = document.getElementById("hover-tooltip");
+      const npcLayer = createNpcLayer(map);
       const estLayer = createEstablishmentLayer(map);
-      const npcLayer = createNpcLayer(map, estLayer);
       const autocomplete = document.getElementById("autocomplete");
+      
+      createToggleControls(map, npcLayer, estLayer);
+      createLegend(map);
       
       // Fix mobile initial render
       google.maps.event.addListenerOnce(map, "idle", () => {
@@ -377,7 +380,7 @@
     /* =====================
        Layers
     ====================== */
-    function createNpcLayer(map, estLayer) {
+    function createNpcLayer(map) {
       const layer = new google.maps.Data({ map });
 
       layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
@@ -397,10 +400,8 @@
           }
         });
       });
+      
       uniqueDivisions.sort();
-
-      createToggleControls(map, layer, estLayer);
-      createLegend(map);
       
       layer.setStyle(NPC_NORMAL_STYLE);
       
