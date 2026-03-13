@@ -514,6 +514,8 @@
         ${divisionHtml}
       `;
 
+      console.log(div.innerHTML);
+
       const [npcToggle, estToggle] = div.querySelectorAll("input");
 
       npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
