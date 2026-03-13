@@ -500,7 +500,7 @@
       const divisions = [...uniqueDivisions].sort();
       console.log(uniqueDivisions)
       // Build division list HTML
-      const divisionHtml = divisions
+      const divisionHtml = uniqueDivisions
         .map(d => `<label><input type="checkbox" checked /> ${d} Division</label><br />`)
       
       div.innerHTML = `
