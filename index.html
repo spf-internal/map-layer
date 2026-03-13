@@ -378,7 +378,7 @@
           }
           
           // Store unique DIVISION values
-          if (division && !uniqueDivisions.has(division)) {
+          if (division) {
             uniqueDivisions.add(division);
             console.log(division)
           }
@@ -498,10 +498,12 @@
       
       // Convert Set → sorted array
       const divisions = [...uniqueDivisions].sort();
-      console.log(uniqueDivisions)
+      console.log(divisions)
+      
       // Build division list HTML
-      const divisionHtml = uniqueDivisions
+      const divisionHtml = divisions
         .map(d => `<label><input type="checkbox" checked /> ${d} Division</label><br />`)
+        .join("");
       
       div.innerHTML = `
         <b>Filter</b><br />
@@ -512,10 +514,10 @@
         ${divisionHtml}
       `;
 
-      const [npcToggle, estToggle] = div.querySelectorAll("input");
+      // const [npcToggle, estToggle] = div.querySelectorAll("input");
 
-      npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
-      estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+      // npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+      // estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
 
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
