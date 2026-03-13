@@ -369,7 +369,7 @@
       layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
         features.forEach(feature => {
           const npcName = feature.getProperty("NPC_NAME");
-          const division = feature.getProperty("DIVISION");
+          const division = feature.getProperty("DIV");
           
           // Remove features that do NOT have NPC_NAME
           if (!npcName || npcName.trim() === "") {
@@ -380,7 +380,7 @@
           // Store unique DIVISION values
           if (division && !uniqueDivisions.has(division)) {
             uniqueDivisions.add(division);
-            console.log("testing" & division)
+            console.log(division)
           }
         });
       });
