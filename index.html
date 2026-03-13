@@ -286,6 +286,7 @@
     
     let map;
     let marker;
+    let uniqueDivisions = new Set();
     let clickInfoWindow;
     let clickedFeature = null;
     let clickedLayer = null;
@@ -368,10 +369,16 @@
       layer.loadGeoJson(NPC_GEOJSON_URL, null, features => {
         features.forEach(feature => {
           const npcName = feature.getProperty("NPC_NAME");
+          const division = feature.getProperty("DIVISION");
           
           // Remove features that do NOT have NPC_NAME
           if (!npcName || npcName.trim() === "") {
             layer.remove(feature);
+          }
+          
+          // Store unique DIVISION values
+          if (division  && !uniqueDivisions.has(division)) {
+            uniqueDivisions.add(division);
           }
         });
       });
@@ -486,10 +493,22 @@
     function createToggleControls(map, npcLayer, estLayer) {
       const div = document.createElement("div");
       div.className = "control-box filter-control";
+      
+      // Convert Set → sorted array
+      const divisions = [...uniqueDivisions].sort();
+      
+      // Build division list HTML
+      const divisionHtml = divisions
+        .map(d => `<label><input type="checkbox" /> ${d}</label>`)
+        .join("<br />");
+      
       div.innerHTML = `
         <b>Filter</b><br />
         <label><input type="checkbox" checked /> NPC Boundaries</label><br />
         <label><input type="checkbox" checked /> NPP Locations</label>
+        <hr/>
+        <b>Divisions</b><br />
+        ${divisionHtml}
       `;
 
       const [npcToggle, estToggle] = div.querySelectorAll("input");
