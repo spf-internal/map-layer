@@ -380,7 +380,6 @@
           // Store unique DIVISION values
           if (division) {
             uniqueDivisions.add(division);
-            console.log(division)
           }
         });
       });
@@ -497,13 +496,13 @@
       div.className = "control-box filter-control";
       
       // Convert Set → sorted array
-      const divisions = [...uniqueDivisions].sort();
+      const divisions = Array.from(uniqueDivisions).sort();
       console.log(divisions)
       
       // Build division list HTML
       const divisionHtml = divisions
-        .map(d => `<label><input type="checkbox" checked /> ${d} Division</label><br />`)
-        .join("");
+        .map(d => `<label><input type="checkbox" checked /> ${d} Division</label>`)
+        .join("<br />");
       
       div.innerHTML = `
         <b>Filter</b><br />
@@ -514,10 +513,10 @@
         ${divisionHtml}
       `;
 
-      // const [npcToggle, estToggle] = div.querySelectorAll("input");
+      const [npcToggle, estToggle] = div.querySelectorAll("input");
 
-      // npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
-      // estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+      npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+      estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
 
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
