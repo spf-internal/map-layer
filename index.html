@@ -268,32 +268,48 @@
       DEFAULT: "#D32F2F"
     };
     
-    const NPC_NORMAL_STYLE = feature => ({
-      fillColor: stringToColor(feature.getProperty("NPC_NAME")),
-      fillOpacity: 0.55,
-      strokeColor: "#333333",
-      strokeWeight: 1.5,
-      zIndex: 1
-    });
+    const NPC_NORMAL_STYLE = feature => {
+      const value =
+        boundaryColorMode === "npc"
+          ? feature.getProperty("NPC_NAME")
+          : feature.getProperty("DIV");
+      
+      return {
+        fillColor: stringToColor(value),
+        fillOpacity: 0.55,
+        strokeColor: "#333333",
+        strokeWeight: 1.5,
+        zIndex: 1
+      }
+    };
     
-    const NPC_ACTIVE_STYLE = feature => ({
-      fillColor: stringToColor(feature.getProperty("NPC_NAME")),
-      fillOpacity: 0.55,          // optional: slightly stronger fill
-      strokeColor: "#ffffff",     // white border
-      strokeWeight: 3,             // tighter / more prominent border
-      zIndex: 999   // 🔥 always on top
-    });
+    const NPC_ACTIVE_STYLE = feature => {
+      const value =
+        boundaryColorMode === "npc"
+          ? feature.getProperty("NPC_NAME")
+          : feature.getProperty("DIV");
+      
+      return {
+        fillColor: stringToColor(value),
+        fillOpacity: 0.55,          // optional: slightly stronger fill
+        strokeColor: "#ffffff",     // white border
+        strokeWeight: 3,             // tighter / more prominent border
+        zIndex: 999   // 🔥 always on top
+      }
+    };
     
     let map;
     let marker;
-    let legendDiv;
-    let uniqueDivisions = [];
     let clickInfoWindow;
     let clickedFeature = null;
     let clickedLayer = null;
     let isClickInfoWindowOpen = false;
     let isNppClicked = false;
     let tooltip;
+    
+    let legendDiv;
+    let boundaryColorMode = "npc"; 
+    let uniqueDivisions = [];
     
     /* =====================
        Init Map
@@ -504,6 +520,11 @@
       console.log(divisionHtml);
       
       div.innerHTML = `
+        <b>Boundary Colour</b><br />
+        <label><input type="radio" name="colorMode" value="npc" checked> NPC</label><br/>
+        <label><input type="radio" name="colorMode" value="division"> Division</label>
+        <hr/>
+        
         <b>Filter</b><br />
         <label><input type="checkbox" checked /> NPC Boundaries</label><br />
         <label><input type="checkbox" checked /> NPP Locations</label>
@@ -515,7 +536,6 @@
       console.log(div.innerHTML);
 
       const [npcToggle, estToggle] = div.querySelectorAll("input");
-
       npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
       estToggle.onchange = e => {
         const visible = e.target.checked;
@@ -526,6 +546,16 @@
           legendDiv.style.display = visible ? "block" : "none";
         }
       }
+
+      const colorRadios = div.querySelectorAll("input[name='colorMode']");
+      colorRadios.forEach(radio => {
+        radio.onchange = e => {
+          boundaryColorMode = e.target.value;
+          
+          // refresh layer style
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
+        };
+      });
 
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
