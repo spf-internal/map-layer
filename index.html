@@ -286,7 +286,8 @@
     
     let map;
     let marker;
-    let uniqueDivisions = new Set();
+    let legendDiv;
+    let uniqueDivisions = [];
     let clickInfoWindow;
     let clickedFeature = null;
     let clickedLayer = null;
@@ -378,8 +379,8 @@
           }
           
           // Store unique DIVISION values
-          if (division) {
-            uniqueDivisions.add(division);
+          if (division && !uniqueDivisions.includes(division)) {
+            uniqueDivisions.push(division);
           }
         });
       });
@@ -494,14 +495,13 @@
     function createToggleControls(map, npcLayer, estLayer) {
       const div = document.createElement("div");
       div.className = "control-box filter-control";
-      
-      // Convert Set → sorted array
-      const divisions = Array.from(uniqueDivisions).sort();
+
       console.log(uniqueDivisions)
-      console.log(divisions)
+      uniqueDivisions = uniqueDivisions.sort();
+      console.log(uniqueDivisions)
       
       // Build division list HTML
-      const divisionHtml = divisions
+      const divisionHtml = uniqueDivisions
         .map(d => `<label><input type="checkbox" checked /> ${d} Division</label>`)
         .join("<br />");
       
@@ -517,15 +517,23 @@
       const [npcToggle, estToggle] = div.querySelectorAll("input");
 
       npcToggle.onchange = e => npcLayer.setMap(e.target.checked ? map : null);
-      estToggle.onchange = e => estLayer.setMap(e.target.checked ? map : null);
+      estToggle.onchange = e => {
+        const visible = e.target.checked;
+  
+        estLayer.setMap(visible ? map : null);
+
+        if (legendDiv) {
+          legendDiv.style.display = visible ? "block" : "none";
+        }
+      }
 
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
 
     function createLegend(map) {
-      const div = document.createElement("div");
-      div.className = "control-box";
-      div.innerHTML = `
+      legendDiv = document.createElement("div");
+      legendDiv.className = "control-box";
+      legendDiv.innerHTML = `
         <b>Legend</b>
         <div class="legend-row"><span class="color-box npp"></span> NPP (Open)</div>
         <div class="legend-row"><span class="color-box closed"></span> NPP (Closed)</div>
