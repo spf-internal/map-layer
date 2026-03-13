@@ -541,8 +541,11 @@
         radio.onchange = e => {
           boundaryColorMode = e.target.value;
           
-          // // refresh layer style
-          // npcLayer.setStyle(NPC_NORMAL_STYLE);
+          // 🔥 clear all previous overrides
+          npcLayer.revertStyle();
+          
+          // reapply style function
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
         };
       });
       
