@@ -374,11 +374,13 @@
           // Remove features that do NOT have NPC_NAME
           if (!npcName || npcName.trim() === "") {
             layer.remove(feature);
+            return; // skip the rest of this iteration
           }
           
           // Store unique DIVISION values
-          if (division  && !uniqueDivisions.has(division)) {
+          if (division && !uniqueDivisions.has(division)) {
             uniqueDivisions.add(division);
+            console.log("testing" & division)
           }
         });
       });
