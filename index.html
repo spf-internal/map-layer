@@ -706,8 +706,8 @@
       // 🔵 Special handling for very short strings
       if (str && str.length <= 2) {
         const char = str.toUpperCase().charCodeAt(0);
-        const index = (char >= 65 && char <= 90) ? char - 65 : Math.abs(hash) % 26;
-        const hue = (index * (360 / 26)); // evenly spaced
+        const index = (char >= 65 && char <= 90) ? char - 65 : 0;
+        const hue = (index * 137.508) % 360;
         
         return `hsl(${hue}, 60%, 60%)`;
       }
