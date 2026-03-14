@@ -533,6 +533,11 @@
       const filterContainer = div.querySelector("#filterContainer");
       // 🔹 function to render filters
       function renderFilters(mode) {
+        npcLayer.revertStyle();
+        npcLayer.setStyle(NPC_NORMAL_STYLE);
+        npcLayer.setMap(map);
+        estLayer.setMap(map);
+        
         if (mode === "npc") {
           filterContainer.innerHTML = `
             <b>Filter</b><br />
