@@ -592,9 +592,17 @@
             }
           };
           divisionToggle.onchange = e => {
-            checks.forEach(cb => cb.checked = false);
             const visible = e.target.checked;
             npcLayer.setMap(visible ? map : null);
+            
+            if (visible) {
+              // reset filter
+              npcLayer.revertStyle();
+              npcLayer.setStyle(NPC_NORMAL_STYLE);
+          
+              // uncheck all division filters
+              checks.forEach(cb => cb.checked = false);
+            }
           };
           checks.forEach(cb => {
             cb.onchange = () => {
@@ -607,14 +615,9 @@
               npcLayer.setStyle(feature => {
                 const div = feature.getProperty("DIV");
                 
-                if (activeDivisions.length === 0) {
-                  return { visible: true };
-                }
-
                 if (activeDivisions.length === uniqueDivisions.length) {
                   divisionToggle.checked = true;
                   checks.forEach(cb => cb.checked = false);
-                  return { visible: true };
                 }
                 
                 if (!activeDivisions.includes(div)) {
