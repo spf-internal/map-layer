@@ -594,6 +594,7 @@
           divisionToggle.onchange = e => {
             const visible = e.target.checked;
             npcLayer.setMap(visible ? map : null);
+            checks.forEach(cb => cb.checked = false);
           };
           checks.forEach(cb => {
             cb.onchange = () => {
@@ -612,7 +613,7 @@
 
                 if (activeDivisions.length === uniqueDivisions.length) {
                   divisionToggle.checked = true;
-                  cb.checked = false;
+                  checks.forEach(cb => cb.checked = false);
                 }
                 
                 return NPC_NORMAL_STYLE(feature);
