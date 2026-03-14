@@ -592,9 +592,9 @@
             }
           };
           divisionToggle.onchange = e => {
+            checks.forEach(cb => cb.checked = false);
             const visible = e.target.checked;
             npcLayer.setMap(visible ? map : null);
-            checks.forEach(cb => cb.checked = false);
           };
           checks.forEach(cb => {
             cb.onchange = () => {
