@@ -538,6 +538,7 @@
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
           estLayer.setMap(map);
+          legendDiv.style.display = "block";
           
           filterContainer.innerHTML = `
             <b>Filter</b><br />
@@ -565,6 +566,7 @@
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
           estLayer.setMap(map);
+          legendDiv.style.display = "block";
           
           const divisionHtml = uniqueDivisions
             .map(d => {
