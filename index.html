@@ -607,6 +607,7 @@
           checks.forEach(cb => {
             cb.onchange = () => {
               divisionToggle.checked = false;
+              npcLayer.setMap(map);
               
               const activeDivisions = [...checks]
                 .filter(c => c.checked)
