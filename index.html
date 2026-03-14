@@ -522,7 +522,6 @@
       `
       
       const filterContainer = div.querySelector("#filterContainer");
-      
       // 🔹 function to render filters
       function renderFilters(mode) {
         if (mode === "npc") {
@@ -606,8 +605,13 @@
           
           // reapply style function
           npcLayer.setStyle(NPC_NORMAL_STYLE);
+          
+          renderFilters(boundaryColorMode);
         };
       });
+      
+      // 🔹 initial render
+      renderFilters("npc");
       
       map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
     }
