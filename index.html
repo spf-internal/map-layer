@@ -533,12 +533,12 @@
       const filterContainer = div.querySelector("#filterContainer");
       // 🔹 function to render filters
       function renderFilters(mode) {
-        npcLayer.revertStyle();
-        npcLayer.setStyle(NPC_NORMAL_STYLE);
-        npcLayer.setMap(map);
-        estLayer.setMap(map);
-        
         if (mode === "npc") {
+          npcLayer.revertStyle();
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
+          npcLayer.setMap(map);
+          estLayer.setMap(map);
+          
           filterContainer.innerHTML = `
             <b>Filter</b><br />
             <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
@@ -561,6 +561,11 @@
           };
         }
         else if (mode === "division") {
+          npcLayer.revertStyle();
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
+          npcLayer.setMap(map);
+          estLayer.setMap(map);
+          
           const divisionHtml = uniqueDivisions
             .map(d => {
               const color = stringToColor(d);
