@@ -607,13 +607,18 @@
               npcLayer.setStyle(feature => {
                 const div = feature.getProperty("DIV");
                 
-                if (!activeDivisions.includes(div)) {
-                  return { visible: false };
+                if (activeDivisions.length === 0) {
+                  return { visible: true };
                 }
 
                 if (activeDivisions.length === uniqueDivisions.length) {
                   divisionToggle.checked = true;
                   checks.forEach(cb => cb.checked = false);
+                  return { visible: true };
+                }
+                
+                if (!activeDivisions.includes(div)) {
+                  return { visible: false };
                 }
                 
                 return NPC_NORMAL_STYLE(feature);
