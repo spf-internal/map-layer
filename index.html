@@ -95,6 +95,15 @@
     .closed { background: #FFA500; border-radius: 50%; }
     .error { background: #D32F2F; border-radius: 50%; }
     
+    .division-color {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      border-radius: 2px;
+      vertical-align: middle;
+    }
+    
     /* ---------- Hover Tooltip ---------- */
     #hover-tooltip {
       position: absolute;
@@ -548,12 +557,17 @@
         }
         else if (mode === "division") {
           const divisionHtml = uniqueDivisions
-            .map(d => `
-              <label>
-                <input type="checkbox" class="divisionCheck" value="${d}" checked />
-                ${d} Division
-              </label>
-            `)
+            .map(d => {
+              const color = stringToColor(d);
+              
+              return `
+                <label>
+                  <input type="checkbox" class="divisionCheck" value="${d}" checked />
+                  <span class="division-color" style="background:${color}"></span>
+                  ${d} Division
+                </label>
+              `
+            })
             .join("<br/>");
           
           filterContainer.innerHTML = `
