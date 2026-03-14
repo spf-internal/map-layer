@@ -99,7 +99,7 @@
       display: inline-block;
       width: 12px;
       height: 12px;
-      margin-right: 6px;
+      margin-bottom: 3px;
       border-radius: 2px;
       vertical-align: middle;
     }
@@ -562,7 +562,7 @@
               
               return `
                 <label>
-                  <input type="checkbox" class="divisionCheck" value="${d}" checked />
+                  <input type="checkbox" class="divisionCheck" value="${d}" />
                   <span class="division-color" style="background:${color}"></span>
                   ${d} Division
                 </label>
@@ -575,10 +575,12 @@
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
             <hr/>
             <b>Divisions</b><br />
+            <label><input type="checkbox" id="divisionToggle" checked /> All Division</label><br />
             ${divisionHtml}
           `;
           
-          const nppToggle = filterContainer.querySelector("#nppToggle");          
+          const nppToggle = filterContainer.querySelector("#nppToggle");
+          const divisionToggle = filterContainer.querySelector("#divisionToggle");
           const checks = filterContainer.querySelectorAll(".divisionCheck");
           
           nppToggle.onchange = e => {
@@ -589,8 +591,14 @@
               legendDiv.style.display = visible ? "block" : "none";
             }
           };
+          divisionToggle.onchange = e => {
+            const visible = e.target.checked;
+            npcLayer.setMap(visible ? map : null);
+          };
           checks.forEach(cb => {
             cb.onchange = () => {
+              divisionToggle.checked = false;
+              
               const activeDivisions = [...checks]
                 .filter(c => c.checked)
                 .map(c => c.value);
@@ -600,6 +608,11 @@
                 
                 if (!activeDivisions.includes(div)) {
                   return { visible: false };
+                }
+
+                if (activeDivisions.length === uniqueDivisions.length) {
+                  divisionToggle.checked = true;
+                  cb.checked = false;
                 }
                 
                 return NPC_NORMAL_STYLE(feature);
