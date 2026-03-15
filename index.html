@@ -56,18 +56,59 @@
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
-      max-width: 400px;
+      max-width: 450px;
       background: white;
       border: 0px solid white;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       z-index: 2000;
+      display: flex;
+      align-items: center;
     }
     
     gmp-place-autocomplete {
       width: 100%;
     }
 
+    /* ---------- Filter Button ---------- */
+    .dropdown-wrapper {
+      margin: 0 0 0 8px; /* Gap between search and button */
+      position: relative;
+    }
+    
+    .filter-btn {
+      width: 32px;
+      height: 32px;
+      background: #f8f8f8;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    
+    .filter-control {
+      position: absolute;
+      top: 45px; /* sit below the button */
+      right: 0;
+      left: auto;
+      display: none; /* hidden by default */
+      min-width: 250px;
+      z-index: 3000;
+    }
+    
+    .filter-control.show {
+      display: block;
+    }
+    
+    .division-list {
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
     /* ---------- Controls ---------- */
     .control-box {
       background: #ffffff;
@@ -173,10 +214,10 @@
     /* ---------- Mobile Responsive Design ---------- */
     @media (max-width: 1100px) {
       .search-container {
-        width: calc(100% - 16px);
+        width: calc(100% - 20px);
         max-width: none;
-        top: 95px;
-        left: 8px;
+        top: 10px;
+        left: 10px;
         transform: none;
         border-radius: 10px;
       }
@@ -194,15 +235,14 @@
         border-radius: 10px;
       }
       
-      /* .filter-control {
+      .filter-control {
         position: fixed !important;
-        top: 140px !important;
-        right: 8px;
-        left: auto !important;
-        margin: 0;
-        z-index: 3000;
-      } */
-    
+        top: 60px !important;
+        left: 10px !important;
+        right: 10px !important;
+        max-width: none;
+      }
+      
       .color-box {
         width: 12px;
         height: 12px;
@@ -247,47 +287,6 @@
         display: none !important;
       }
     }
-
-    /* Container for the trigger and the menu */
-    .dropdown-wrapper {
-      margin: 10px;
-      position: relative;
-    }
-    
-    /* The small square button with the icon */
-    .filter-btn {
-      width: 40px;
-      height: 40px;
-      background: white;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    
-    /* Modify your existing filter-control to behave like a dropdown menu */
-    .filter-control {
-      position: absolute;
-      top: 45px; /* sit below the button */
-      left: 0;
-      display: none; /* hidden by default */
-      min-width: 220px;
-      max-width: 300px;
-      margin: 0; 
-    }
-    
-    .filter-control.show {
-      display: block;
-    }
-    
-    /* Scrollable area for divisions so the menu doesn't overflow the screen */
-    .division-list {
-      max-height: 250px;
-      overflow-y: auto;
-      padding-right: 5px;
-    }
   </style>
 </head>
 
@@ -299,6 +298,8 @@
       placeholder="Search for a place..."
       country="sg">
     </gmp-place-autocomplete>
+
+    <div id="filter-anchor"></div>
   </div>
   <!-- Map -->
   <div id="map"></div>
@@ -663,7 +664,11 @@
       });
     
       renderFilters("npc");
-      map.controls[google.maps.ControlPosition.TOP_LEFT].push(wrapper);
+      
+      const anchor = document.getElementById("filter-anchor");
+      if (anchor) {
+        anchor.appendChild(wrapper);
+      }
     }
     
     // function createToggleControls(map, npcLayer, estLayer) {
