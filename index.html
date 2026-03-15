@@ -247,6 +247,47 @@
         display: none !important;
       }
     }
+
+    /* Container for the trigger and the menu */
+    .dropdown-wrapper {
+      margin: 10px;
+      position: relative;
+    }
+    
+    /* The small square button with the icon */
+    .filter-btn {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    
+    /* Modify your existing filter-control to behave like a dropdown menu */
+    .filter-control {
+      position: absolute;
+      top: 45px; /* sit below the button */
+      left: 0;
+      display: none; /* hidden by default */
+      min-width: 220px;
+      max-width: 300px;
+      margin: 0; 
+    }
+    
+    .filter-control.show {
+      display: block;
+    }
+    
+    /* Scrollable area for divisions so the menu doesn't overflow the screen */
+    .division-list {
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
   </style>
 </head>
 
@@ -520,154 +561,260 @@
        UI Components
     ====================== */
     function createToggleControls(map, npcLayer, estLayer) {
-      const div = document.createElement("div");
-      div.className = "control-box filter-control";      
-      div.innerHTML = `
-        <b>Boundary Colour</b><br />
-        <label><input type="radio" name="colorMode" value="npc" checked> NPC</label><br/>
-        <label><input type="radio" name="colorMode" value="division"> Division</label>
-        <hr/>
-        <div id="filterContainer"></div>
-      `
+      const wrapper = document.createElement("div");
+      wrapper.className = "dropdown-wrapper";
+    
+      // 1. Create the Toggle Button (The Filter Icon)
+      const btn = document.createElement("div");
+      btn.className = "filter-btn";
+      btn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>`;
       
+      // 2. Create your original control box
+      const div = document.createElement("div");
+      div.className = "control-box filter-control"; 
+      
+      // 3. Setup HTML Structure
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <b style="font-size:16px;">Map Filters</b>
+          <span id="closeFilter" style="cursor:pointer; font-size:20px;">&times;</span>
+        </div>
+        <b>Boundary Colour</b><br />
+        <label><input type="radio" name="colorMode" value="npc" checked> NPC</label>
+        <label style="margin-left:10px;"><input type="radio" name="colorMode" value="division"> Division</label>
+        <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
+        <div id="filterContainer"></div>
+      `;
+    
+      wrapper.appendChild(btn);
+      wrapper.appendChild(div);
+    
+      // --- Logic for Opening/Closing ---
+      btn.onclick = (e) => {
+        div.classList.toggle("show");
+        e.stopPropagation();
+      };
+    
+      div.querySelector("#closeFilter").onclick = () => div.classList.remove("show");
+    
+      // Close if user clicks map or anywhere else
+      google.maps.event.addDomListener(document, 'click', (e) => {
+        if (!wrapper.contains(e.target)) div.classList.remove("show");
+      });
+    
       const filterContainer = div.querySelector("#filterContainer");
-      // 🔹 function to render filters
+    
       function renderFilters(mode) {
         if (mode === "npc") {
-          npcLayer.revertStyle();
-          npcLayer.setStyle(NPC_NORMAL_STYLE);
-          npcLayer.setMap(map);
-          estLayer.setMap(map);
-          if (legendDiv) {
-            legendDiv.style.display = "block";
-          }
-          
           filterContainer.innerHTML = `
-            <b>Filter</b><br />
+            <b>Layers</b><br />
             <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
           `;
-          
-          const npcToggle = filterContainer.querySelector("#npcToggle");
-          const nppToggle = filterContainer.querySelector("#nppToggle");
-          
-          npcToggle.onchange = e => {
-            npcLayer.setMap(e.target.checked ? map : null);
+    
+          filterContainer.querySelector("#npcToggle").onchange = e => npcLayer.setMap(e.target.checked ? map : null);
+          filterContainer.querySelector("#nppToggle").onchange = e => {
+            estLayer.setMap(e.target.checked ? map : null);
+            if (legendDiv) legendDiv.style.display = e.target.checked ? "block" : "none";
           };
-          nppToggle.onchange = e => {
-            const visible = e.target.checked;
-            estLayer.setMap(visible ? map : null);
-            
-            if (legendDiv) {
-              legendDiv.style.display = visible ? "block" : "none";
-            }
-          };
-        }
+        } 
         else if (mode === "division") {
-          npcLayer.revertStyle();
-          npcLayer.setStyle(NPC_NORMAL_STYLE);
-          npcLayer.setMap(map);
-          estLayer.setMap(map);
-          if (legendDiv) {
-            legendDiv.style.display = "block";
-          }
-          
-          const divisionHtml = uniqueDivisions
-            .map(d => {
-              const color = stringToColor(d);
-              
-              return `
-                <label>
-                  <input type="checkbox" class="divisionCheck" value="${d}" />
-                  <span class="division-color" style="background:${color}"></span>
-                  ${d} Division
-                </label>
-              `
-            })
-            .join("<br/>");
-          
+          const divisionHtml = uniqueDivisions.map(d => `
+            <label style="display:block; margin-bottom:4px;">
+              <input type="checkbox" class="divisionCheck" value="${d}" checked />
+              <span class="division-color" style="background:${stringToColor(d)}"></span> ${d}
+            </label>
+          `).join("");
+    
           filterContainer.innerHTML = `
-            <b>Filter</b><br />
+            <b>Layers</b><br />
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
-            <hr/>
-            <b>Divisions</b><br />
-            <label><input type="checkbox" id="divisionToggle" checked /> All Division</label><br />
-            ${divisionHtml}
+            <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+               <b>Divisions</b>
+               <small><a href="#" id="selAll">All</a> | <a href="#" id="selNone">None</a></small>
+            </div>
+            <div class="division-list">${divisionHtml}</div>
           `;
-          
-          const nppToggle = filterContainer.querySelector("#nppToggle");
-          const divisionToggle = filterContainer.querySelector("#divisionToggle");
+    
           const checks = filterContainer.querySelectorAll(".divisionCheck");
-          
-          nppToggle.onchange = e => {
-            const visible = e.target.checked;
-            estLayer.setMap(visible ? map : null);
-            
-            if (legendDiv) {
-              legendDiv.style.display = visible ? "block" : "none";
-            }
+          const updateVis = () => {
+            const active = [...checks].filter(c => c.checked).map(c => c.value);
+            npcLayer.setStyle(f => active.includes(f.getProperty("DIV")) ? NPC_NORMAL_STYLE(f) : {visible:false});
           };
-          divisionToggle.onchange = e => {
-            const visible = e.target.checked;
-            npcLayer.setMap(visible ? map : null);
-            
-            if (visible) {
-              // reset filter
-              npcLayer.revertStyle();
-              npcLayer.setStyle(NPC_NORMAL_STYLE);
-          
-              // uncheck all division filters
-              checks.forEach(cb => cb.checked = false);
-            }
-          };
-          checks.forEach(cb => {
-            cb.onchange = () => {
-              divisionToggle.checked = false;
-              npcLayer.setMap(map);
-              
-              const activeDivisions = [...checks]
-                .filter(c => c.checked)
-                .map(c => c.value);
-              
-              npcLayer.setStyle(feature => {
-                const div = feature.getProperty("DIV");
-                
-                if (activeDivisions.length === uniqueDivisions.length) {
-                  divisionToggle.checked = true;
-                  checks.forEach(cb => cb.checked = false);
-                }
-                
-                if (!activeDivisions.includes(div)) {
-                  return { visible: false };
-                }
-                
-                return NPC_NORMAL_STYLE(feature);
-              });
-            };
-          });
+    
+          filterContainer.querySelector("#nppToggle").onchange = e => estLayer.setMap(e.target.checked ? map : null);
+          filterContainer.querySelector("#selAll").onclick = (e) => { e.preventDefault(); checks.forEach(c => c.checked = true); updateVis(); };
+          filterContainer.querySelector("#selNone").onclick = (e) => { e.preventDefault(); checks.forEach(c => c.checked = false); updateVis(); };
+          checks.forEach(cb => cb.onchange = updateVis);
         }
       }
-      
-      const colorRadios = div.querySelectorAll("input[name='colorMode']");
-      colorRadios.forEach(radio => {
+    
+      div.querySelectorAll("input[name='colorMode']").forEach(radio => {
         radio.onchange = e => {
           boundaryColorMode = e.target.value;
-          
-          // 🔥 clear all previous overrides
           npcLayer.revertStyle();
-          
-          // reapply style function
           npcLayer.setStyle(NPC_NORMAL_STYLE);
-          
           renderFilters(boundaryColorMode);
         };
       });
-      
-      // 🔹 initial render
+    
       renderFilters("npc");
-      
-      map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(wrapper);
     }
+    
+    // function createToggleControls(map, npcLayer, estLayer) {
+    //   const div = document.createElement("div");
+    //   div.className = "control-box filter-control";      
+    //   div.innerHTML = `
+    //     <b>Boundary Colour</b><br />
+    //     <label><input type="radio" name="colorMode" value="npc" checked> NPC</label><br/>
+    //     <label><input type="radio" name="colorMode" value="division"> Division</label>
+    //     <hr/>
+    //     <div id="filterContainer"></div>
+    //   `
+      
+    //   const filterContainer = div.querySelector("#filterContainer");
+    //   // 🔹 function to render filters
+    //   function renderFilters(mode) {
+    //     if (mode === "npc") {
+    //       npcLayer.revertStyle();
+    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
+    //       npcLayer.setMap(map);
+    //       estLayer.setMap(map);
+    //       if (legendDiv) {
+    //         legendDiv.style.display = "block";
+    //       }
+          
+    //       filterContainer.innerHTML = `
+    //         <b>Filter</b><br />
+    //         <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
+    //         <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
+    //       `;
+          
+    //       const npcToggle = filterContainer.querySelector("#npcToggle");
+    //       const nppToggle = filterContainer.querySelector("#nppToggle");
+          
+    //       npcToggle.onchange = e => {
+    //         npcLayer.setMap(e.target.checked ? map : null);
+    //       };
+    //       nppToggle.onchange = e => {
+    //         const visible = e.target.checked;
+    //         estLayer.setMap(visible ? map : null);
+            
+    //         if (legendDiv) {
+    //           legendDiv.style.display = visible ? "block" : "none";
+    //         }
+    //       };
+    //     }
+    //     else if (mode === "division") {
+    //       npcLayer.revertStyle();
+    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
+    //       npcLayer.setMap(map);
+    //       estLayer.setMap(map);
+    //       if (legendDiv) {
+    //         legendDiv.style.display = "block";
+    //       }
+          
+    //       const divisionHtml = uniqueDivisions
+    //         .map(d => {
+    //           const color = stringToColor(d);
+              
+    //           return `
+    //             <label>
+    //               <input type="checkbox" class="divisionCheck" value="${d}" />
+    //               <span class="division-color" style="background:${color}"></span>
+    //               ${d} Division
+    //             </label>
+    //           `
+    //         })
+    //         .join("<br/>");
+          
+    //       filterContainer.innerHTML = `
+    //         <b>Filter</b><br />
+    //         <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
+    //         <hr/>
+    //         <b>Divisions</b><br />
+    //         <label><input type="checkbox" id="divisionToggle" checked /> All Division</label><br />
+    //         ${divisionHtml}
+    //       `;
+          
+    //       const nppToggle = filterContainer.querySelector("#nppToggle");
+    //       const divisionToggle = filterContainer.querySelector("#divisionToggle");
+    //       const checks = filterContainer.querySelectorAll(".divisionCheck");
+          
+    //       nppToggle.onchange = e => {
+    //         const visible = e.target.checked;
+    //         estLayer.setMap(visible ? map : null);
+            
+    //         if (legendDiv) {
+    //           legendDiv.style.display = visible ? "block" : "none";
+    //         }
+    //       };
+    //       divisionToggle.onchange = e => {
+    //         const visible = e.target.checked;
+    //         npcLayer.setMap(visible ? map : null);
+            
+    //         if (visible) {
+    //           // reset filter
+    //           npcLayer.revertStyle();
+    //           npcLayer.setStyle(NPC_NORMAL_STYLE);
+          
+    //           // uncheck all division filters
+    //           checks.forEach(cb => cb.checked = false);
+    //         }
+    //       };
+    //       checks.forEach(cb => {
+    //         cb.onchange = () => {
+    //           divisionToggle.checked = false;
+    //           npcLayer.setMap(map);
+              
+    //           const activeDivisions = [...checks]
+    //             .filter(c => c.checked)
+    //             .map(c => c.value);
+              
+    //           npcLayer.setStyle(feature => {
+    //             const div = feature.getProperty("DIV");
+                
+    //             if (activeDivisions.length === uniqueDivisions.length) {
+    //               divisionToggle.checked = true;
+    //               checks.forEach(cb => cb.checked = false);
+    //             }
+                
+    //             if (!activeDivisions.includes(div)) {
+    //               return { visible: false };
+    //             }
+                
+    //             return NPC_NORMAL_STYLE(feature);
+    //           });
+    //         };
+    //       });
+    //     }
+    //   }
+      
+    //   const colorRadios = div.querySelectorAll("input[name='colorMode']");
+    //   colorRadios.forEach(radio => {
+    //     radio.onchange = e => {
+    //       boundaryColorMode = e.target.value;
+          
+    //       // 🔥 clear all previous overrides
+    //       npcLayer.revertStyle();
+          
+    //       // reapply style function
+    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
+          
+    //       renderFilters(boundaryColorMode);
+    //     };
+    //   });
+      
+    //   // 🔹 initial render
+    //   renderFilters("npc");
+      
+    //   map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
+    // }
 
     function createLegend(map) {
       legendDiv = document.createElement("div");
