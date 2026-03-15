@@ -601,10 +601,13 @@
       div.querySelector("#closeFilter").onclick = () => div.classList.remove("show");
       
       // Close if user clicks map or anywhere else
-      // google.maps.event.addDomListener(document, 'click', (e) => {
-      //   if (!wrapper.contains(e.target)) div.classList.remove("show");
-      // });
-    
+      document.addEventListener('click', (e) => {
+        // If the click is NOT on the button and NOT inside the menu
+        if (!wrapper.contains(e.target)) {
+          div.classList.remove("show");
+        }
+      });
+      
       const filterContainer = div.querySelector("#filterContainer");
       
       // 🔹 function to render filters
@@ -658,7 +661,7 @@
                 ${d} Division
               </label>
             `
-          }).join("<br/>");
+          }).join("");
           
           filterContainer.innerHTML = `
             <b>Map Layer</b><br />
