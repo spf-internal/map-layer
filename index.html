@@ -84,7 +84,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      border: 1px solid #ddd;
+      border: 1px solid black;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     
@@ -588,49 +588,80 @@
         <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
         <div id="filterContainer"></div>
       `;
-    
+      
       wrapper.appendChild(btn);
       wrapper.appendChild(div);
-    
+      
       // --- Logic for Opening/Closing ---
       btn.onclick = (e) => {
         div.classList.toggle("show");
         e.stopPropagation();
       };
-    
+      
       div.querySelector("#closeFilter").onclick = () => div.classList.remove("show");
-    
+      
       // Close if user clicks map or anywhere else
-      google.maps.event.addDomListener(document, 'click', (e) => {
-        if (!wrapper.contains(e.target)) div.classList.remove("show");
-      });
+      // google.maps.event.addDomListener(document, 'click', (e) => {
+      //   if (!wrapper.contains(e.target)) div.classList.remove("show");
+      // });
     
       const filterContainer = div.querySelector("#filterContainer");
-    
+      
+      // 🔹 function to render filters
       function renderFilters(mode) {
         if (mode === "npc") {
+          npcLayer.revertStyle();
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
+          npcLayer.setMap(map);
+          estLayer.setMap(map);
+          if (legendDiv) {
+            legendDiv.style.display = "block";
+          }
+          
           filterContainer.innerHTML = `
-            <b>Layers</b><br />
+            <b>Map Layers</b><br />
             <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
           `;
-    
-          filterContainer.querySelector("#npcToggle").onchange = e => npcLayer.setMap(e.target.checked ? map : null);
-          filterContainer.querySelector("#nppToggle").onchange = e => {
-            estLayer.setMap(e.target.checked ? map : null);
-            if (legendDiv) legendDiv.style.display = e.target.checked ? "block" : "none";
+          
+          const npcToggle = filterContainer.querySelector("#npcToggle");
+          const nppToggle = filterContainer.querySelector("#nppToggle");
+          
+          npcToggle.onchange = e => {
+            npcLayer.setMap(e.target.checked ? map : null);
+          };
+          nppToggle.onchange = e => {
+            const visible = e.target.checked;
+            estLayer.setMap(visible ? map : null);
+            
+            if (legendDiv) {
+              legendDiv.style.display = visible ? "block" : "none";
+            }
           };
         } 
         else if (mode === "division") {
-          const divisionHtml = uniqueDivisions.map(d => `
-            <label style="display:block; margin-bottom:4px;">
-              <input type="checkbox" class="divisionCheck" value="${d}" checked />
-              <span class="division-color" style="background:${stringToColor(d)}"></span> ${d}
-            </label>
-          `).join("");
-    
+          npcLayer.revertStyle();
+          npcLayer.setStyle(NPC_NORMAL_STYLE);
+          npcLayer.setMap(map);
+          estLayer.setMap(map);
+          if (legendDiv) {
+            legendDiv.style.display = "block";
+          }
+          
+          const divisionHtml = uniqueDivisions.map(d => {
+            const color = stringToColor(d);
+            
+            return `
+              <label style="display:block; margin-bottom:4px;">
+                <input type="checkbox" class="divisionCheck" value="${d}" checked />
+                <span class="division-color" style="background:${color}"></span>
+                ${d} Division
+              </label>
+            `
+          }).join("<br/>");
+          
           filterContainer.innerHTML = `
-            <b>Layers</b><br />
+            <b>Map Layer</b><br />
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
             <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
@@ -639,21 +670,52 @@
             </div>
             <div class="division-list">${divisionHtml}</div>
           `;
-    
+
+          const nppToggle = filterContainer.querySelector("#nppToggle");
           const checks = filterContainer.querySelectorAll(".divisionCheck");
+          const selectAll = filterContainer.querySelector("#selAll");
+          const selectNone = filterContainer.querySelector("#selNone");
           const updateVis = () => {
-            const active = [...checks].filter(c => c.checked).map(c => c.value);
-            npcLayer.setStyle(f => active.includes(f.getProperty("DIV")) ? NPC_NORMAL_STYLE(f) : {visible:false});
+            const activeDivisions = [...checks]
+              .filter(c => c.checked)
+              .map(c => c.value);
+            
+            npcLayer.setStyle(feature => {
+              const div = feature.getProperty("DIV");
+              
+              if (!activeDivisions.includes(div)) {
+                return { visible: false };
+              }
+              
+              return NPC_NORMAL_STYLE(feature);
+            });
+            npcLayer.setStyle(f => );
           };
-    
-          filterContainer.querySelector("#nppToggle").onchange = e => estLayer.setMap(e.target.checked ? map : null);
-          filterContainer.querySelector("#selAll").onclick = (e) => { e.preventDefault(); checks.forEach(c => c.checked = true); updateVis(); };
-          filterContainer.querySelector("#selNone").onclick = (e) => { e.preventDefault(); checks.forEach(c => c.checked = false); updateVis(); };
+          
+          nppToggle.onchange = e => {
+            const visible = e.target.checked;
+            estLayer.setMap(visible ? map : null);
+            
+            if (legendDiv) {
+              legendDiv.style.display = visible ? "block" : "none";
+            }
+          };
+          selectAll.onclick = e => {
+            e.preventDefault();
+            checks.forEach(c => c.checked = true);
+            updateVis();
+          };
+          selectNone.onclick = e => {
+            e.preventDefault();
+            checks.forEach(c => c.checked = false);
+            updateVis();
+          };
           checks.forEach(cb => cb.onchange = updateVis);
         }
       }
-    
-      div.querySelectorAll("input[name='colorMode']").forEach(radio => {
+
+      const colorRadios = div.querySelectorAll("input[name='colorMode']");
+      colorRadios.forEach(radio => {
         radio.onchange = e => {
           boundaryColorMode = e.target.value;
           npcLayer.revertStyle();
@@ -661,7 +723,8 @@
           renderFilters(boundaryColorMode);
         };
       });
-    
+
+      // 🔹 initial render
       renderFilters("npc");
       
       const anchor = document.getElementById("filter-anchor");
@@ -670,156 +733,6 @@
       }
     }
     
-    // function createToggleControls(map, npcLayer, estLayer) {
-    //   const div = document.createElement("div");
-    //   div.className = "control-box filter-control";      
-    //   div.innerHTML = `
-    //     <b>Boundary Colour</b><br />
-    //     <label><input type="radio" name="colorMode" value="npc" checked> NPC</label><br/>
-    //     <label><input type="radio" name="colorMode" value="division"> Division</label>
-    //     <hr/>
-    //     <div id="filterContainer"></div>
-    //   `
-      
-    //   const filterContainer = div.querySelector("#filterContainer");
-    //   // 🔹 function to render filters
-    //   function renderFilters(mode) {
-    //     if (mode === "npc") {
-    //       npcLayer.revertStyle();
-    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
-    //       npcLayer.setMap(map);
-    //       estLayer.setMap(map);
-    //       if (legendDiv) {
-    //         legendDiv.style.display = "block";
-    //       }
-          
-    //       filterContainer.innerHTML = `
-    //         <b>Filter</b><br />
-    //         <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
-    //         <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
-    //       `;
-          
-    //       const npcToggle = filterContainer.querySelector("#npcToggle");
-    //       const nppToggle = filterContainer.querySelector("#nppToggle");
-          
-    //       npcToggle.onchange = e => {
-    //         npcLayer.setMap(e.target.checked ? map : null);
-    //       };
-    //       nppToggle.onchange = e => {
-    //         const visible = e.target.checked;
-    //         estLayer.setMap(visible ? map : null);
-            
-    //         if (legendDiv) {
-    //           legendDiv.style.display = visible ? "block" : "none";
-    //         }
-    //       };
-    //     }
-    //     else if (mode === "division") {
-    //       npcLayer.revertStyle();
-    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
-    //       npcLayer.setMap(map);
-    //       estLayer.setMap(map);
-    //       if (legendDiv) {
-    //         legendDiv.style.display = "block";
-    //       }
-          
-    //       const divisionHtml = uniqueDivisions
-    //         .map(d => {
-    //           const color = stringToColor(d);
-              
-    //           return `
-    //             <label>
-    //               <input type="checkbox" class="divisionCheck" value="${d}" />
-    //               <span class="division-color" style="background:${color}"></span>
-    //               ${d} Division
-    //             </label>
-    //           `
-    //         })
-    //         .join("<br/>");
-          
-    //       filterContainer.innerHTML = `
-    //         <b>Filter</b><br />
-    //         <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
-    //         <hr/>
-    //         <b>Divisions</b><br />
-    //         <label><input type="checkbox" id="divisionToggle" checked /> All Division</label><br />
-    //         ${divisionHtml}
-    //       `;
-          
-    //       const nppToggle = filterContainer.querySelector("#nppToggle");
-    //       const divisionToggle = filterContainer.querySelector("#divisionToggle");
-    //       const checks = filterContainer.querySelectorAll(".divisionCheck");
-          
-    //       nppToggle.onchange = e => {
-    //         const visible = e.target.checked;
-    //         estLayer.setMap(visible ? map : null);
-            
-    //         if (legendDiv) {
-    //           legendDiv.style.display = visible ? "block" : "none";
-    //         }
-    //       };
-    //       divisionToggle.onchange = e => {
-    //         const visible = e.target.checked;
-    //         npcLayer.setMap(visible ? map : null);
-            
-    //         if (visible) {
-    //           // reset filter
-    //           npcLayer.revertStyle();
-    //           npcLayer.setStyle(NPC_NORMAL_STYLE);
-          
-    //           // uncheck all division filters
-    //           checks.forEach(cb => cb.checked = false);
-    //         }
-    //       };
-    //       checks.forEach(cb => {
-    //         cb.onchange = () => {
-    //           divisionToggle.checked = false;
-    //           npcLayer.setMap(map);
-              
-    //           const activeDivisions = [...checks]
-    //             .filter(c => c.checked)
-    //             .map(c => c.value);
-              
-    //           npcLayer.setStyle(feature => {
-    //             const div = feature.getProperty("DIV");
-                
-    //             if (activeDivisions.length === uniqueDivisions.length) {
-    //               divisionToggle.checked = true;
-    //               checks.forEach(cb => cb.checked = false);
-    //             }
-                
-    //             if (!activeDivisions.includes(div)) {
-    //               return { visible: false };
-    //             }
-                
-    //             return NPC_NORMAL_STYLE(feature);
-    //           });
-    //         };
-    //       });
-    //     }
-    //   }
-      
-    //   const colorRadios = div.querySelectorAll("input[name='colorMode']");
-    //   colorRadios.forEach(radio => {
-    //     radio.onchange = e => {
-    //       boundaryColorMode = e.target.value;
-          
-    //       // 🔥 clear all previous overrides
-    //       npcLayer.revertStyle();
-          
-    //       // reapply style function
-    //       npcLayer.setStyle(NPC_NORMAL_STYLE);
-          
-    //       renderFilters(boundaryColorMode);
-    //     };
-    //   });
-      
-    //   // 🔹 initial render
-    //   renderFilters("npc");
-      
-    //   map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
-    // }
-
     function createLegend(map) {
       legendDiv = document.createElement("div");
       legendDiv.className = "control-box";
