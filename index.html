@@ -617,6 +617,11 @@
           npcLayer.revertStyle();
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
+          estLayer.revertStyle();
+          estLayer.setStyle(feature => ({
+            icon: buildEstablishmentIcon(feature),
+            visible: true
+          }));
           estLayer.setMap(map);
           
           filterContainer.innerHTML = `
@@ -658,8 +663,13 @@
           npcLayer.revertStyle();
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
+          estLayer.revertStyle();
+          estLayer.setStyle(feature => ({
+            icon: buildEstablishmentIcon(feature),
+            visible: true
+          }));
           estLayer.setMap(map);
-
+          
           uniqueDivisions.sort((a, b) => {
             if (a === "p") return 1;   // move "p" to the end
             if (b === "p") return -1;  // keep other elements before "p"
@@ -680,7 +690,8 @@
           
           filterContainer.innerHTML = `
             <b>Map Layer</b><br />
-            <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
+            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /> NPC Locations</label><br />
+            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /> NPP Locations</label>
             <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                <b>Divisions</b>
@@ -691,11 +702,31 @@
           
           const npcToggle = filterContainer.querySelector("#npcToggle");
           const nppToggle = filterContainer.querySelector("#nppToggle");
-          const checks = filterContainer.querySelectorAll(".divisionCheck");
+          const estChecks = filterContainer.querySelectorAll(".estCheck");
+          const updateEstVis = () => {
+            const activeEst = [...estChecks]
+              .filter(c => c.checked)
+              .map(c => c.value);
+            
+            estLayer.setStyle(feature => {
+              const department = feature.getProperty("DEPARTMENT").toLowerCase();
+              
+              if (!activeEst.some(est => department.includes(est))) {
+                return { visible: false };
+              }
+              
+              return {
+                icon: buildEstablishmentIcon(feature),
+                visible: true
+              };
+            });
+          };
+          
+          const divisionChecks = filterContainer.querySelectorAll(".divisionCheck");
           const selectAll = filterContainer.querySelector("#selAll");
           const selectNone = filterContainer.querySelector("#selNone");
-          const updateVis = () => {
-            const activeDivisions = [...checks]
+          const updateDivisionVis = () => {
+            const activeDivisions = [...divisionChecks]
               .filter(c => c.checked)
               .map(c => c.value);
             
@@ -709,21 +740,19 @@
               return NPC_NORMAL_STYLE(feature);
             });
           };
-          
-          // nppToggle.onchange = e => {
-          //   estLayer.setMap(visible ? map : null);
-          // };
+
+          estChecks.forEach(cb => cb.onchange = updateEstVis);
           selectAll.onclick = e => {
             e.preventDefault();
             checks.forEach(c => c.checked = true);
-            updateVis();
+            updateDivisionVis();
           };
           selectNone.onclick = e => {
             e.preventDefault();
             checks.forEach(c => c.checked = false);
-            updateVis();
+            updateDivisionVis();
           };
-          checks.forEach(cb => cb.onchange = updateVis);
+          divisionChecks.forEach(cb => cb.onchange = updateDivisionVis);
         }
       }
 
