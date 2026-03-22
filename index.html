@@ -131,9 +131,9 @@
       vertical-align: middle;
     }
     
-    .npp { background: #1E3A8A; border-radius: 50%; }
-    .closed { background: #FFA500; border-radius: 50%; }
-    .error { background: #D32F2F; border-radius: 50%; }
+    .npc { background: #1E3A8A; border-radius: 50%; }
+    .npp { background: #FFA500; border-radius: 50%; }
+    .others { background: #D32F2F; border-radius: 50%; }
     
     .division-color {
       display: inline-block;
@@ -316,9 +316,9 @@
     const EST_GEOJSON_URL = "https://establishments-geojson-proxy.seixiang232.workers.dev/";
     
     const COLORS = {
-      NPP: "#1E3A8A",
-      CLOSED: "#FFA500",
-      DEFAULT: "#D32F2F"
+      NPC: "#1E3A8A",
+      NPP: "#FFA500",
+      OTHERS: "#D32F2F"
     };
     
     const NPC_NORMAL_STYLE = feature => {
@@ -454,7 +454,11 @@
         });
       });
       
-      uniqueDivisions.sort();
+      uniqueDivisions.sort((a, b) => {
+        if (a === "p") return 1;   // move "p" to the end
+        if (b === "p") return -1;  // keep other elements before "p"
+        return a.localeCompare(b); // normal sorting for the rest
+      });
       
       layer.setStyle(NPC_NORMAL_STYLE);
       
@@ -620,42 +624,49 @@
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
           estLayer.setMap(map);
-          if (legendDiv) {
-            legendDiv.style.display = "block";
-          }
           
           filterContainer.innerHTML = `
             <b>Map Layers</b><br />
-            <label><input type="checkbox" id="npcToggle" checked /> NPC Boundaries</label><br />
+            <label><input type="checkbox" id="npcBoundaryToggle" checked /> NPC Boundaries</label><br />
+            <label><input type="checkbox" id="npcToggle" checked /> NPC Locations</label><br />
             <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
           `;
-          
+
+          const npcBoundaryToggle = filterContainer.querySelector("#npcBoundaryToggle");
           const npcToggle = filterContainer.querySelector("#npcToggle");
           const nppToggle = filterContainer.querySelector("#nppToggle");
-          
-          npcToggle.onchange = e => {
+
+          npcBoundaryToggle.onchange = e => {
             npcLayer.setMap(e.target.checked ? map : null);
           };
-          nppToggle.onchange = e => {
-            const visible = e.target.checked;
-            estLayer.setMap(visible ? map : null);
-            
-            if (legendDiv) {
-              legendDiv.style.display = visible ? "block" : "none";
-            }
-          };
+          // npcToggle.onchange = e => {
+          //   estLayer.setMap(visible ? map : null);
+          //   estLayer.setStyle(feature => {
+          //     const div = feature.getProperty("DIV");
+              
+          //     if (!activeDivisions.includes(div)) {
+          //       return { visible: false };
+          //     }
+              
+          //     return NPC_NORMAL_STYLE(feature);
+          //   });
+          // };
+          // nppToggle.onchange = e => {
+          //   estLayer.setMap(visible ? map : null);
+          // };
         } 
         else if (mode === "division") {
           npcLayer.revertStyle();
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
           estLayer.setMap(map);
-          if (legendDiv) {
-            legendDiv.style.display = "block";
-          }
           
           const divisionHtml = uniqueDivisions.map(d => {
             const color = stringToColor(d);
+            
+            if (d.toLowerCase() === "p") {
+              d = "Airport Police"
+            }
             
             return `
               <label style="display:block; margin-bottom:4px;">
@@ -672,7 +683,7 @@
             <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                <b>Divisions</b>
-               <small><a href="#" id="selAll">All</a> | <a href="#" id="selNone">None</a></small>
+               <small><a href="#" id="selAll">Select All</a> | <a href="#" id="selNone">Clear All</a></small>
             </div>
             <div class="division-list">${divisionHtml}</div>
           `;
@@ -697,14 +708,9 @@
             });
           };
           
-          nppToggle.onchange = e => {
-            const visible = e.target.checked;
-            estLayer.setMap(visible ? map : null);
-            
-            if (legendDiv) {
-              legendDiv.style.display = visible ? "block" : "none";
-            }
-          };
+          // nppToggle.onchange = e => {
+          //   estLayer.setMap(visible ? map : null);
+          // };
           selectAll.onclick = e => {
             e.preventDefault();
             checks.forEach(c => c.checked = true);
@@ -743,9 +749,8 @@
       legendDiv.className = "control-box";
       legendDiv.innerHTML = `
         <b>Legend</b>
-        <div class="legend-row"><span class="color-box npp"></span> NPP (Open)</div>
-        <div class="legend-row"><span class="color-box closed"></span> NPP (Closed)</div>
-        <div class="legend-row"><span class="color-box error"></span> Error</div>
+        <div class="legend-row"><span class="color-box npc"></span> Neighbourhood Police Centre (NPC)</div>
+        <div class="legend-row"><span class="color-box npp"></span> Neighbourhood Police Post (NPP)</div>
       `;
 
       map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(legendDiv);
@@ -757,9 +762,9 @@
     function buildEstablishmentIcon(feature) {
       const dept = feature.getProperty("DEPARTMENT") || "";
 
-      let color = COLORS.DEFAULT;
+      let color = COLORS.OTHERS;
+      if (dept.includes("Neighbourhood Police Centre")) color = COLORS.NPC;
       if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
-      if (dept.includes("Neighbourhood Police Post") && dept.includes("Closed")) color = COLORS.CLOSED;
 
       return {
         path: google.maps.SymbolPath.CIRCLE,
@@ -774,11 +779,11 @@
 
     function buildEstablishmentActiveIcon(feature) {
       const dept = feature.getProperty("DEPARTMENT") || "";
-    
-      let color = COLORS.DEFAULT;
+      
+      let color = COLORS.OTHERS;
+      if (dept.includes("Neighbourhood Police Centre")) color = COLORS.NPC;
       if (dept.includes("Neighbourhood Police Post")) color = COLORS.NPP;
-      if (dept.includes("Neighbourhood Police Post") && dept.includes("Closed")) color = COLORS.CLOSED;
-    
+      
       return {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 10,
@@ -792,12 +797,12 @@
     
     function buildNpcContent(feature) {
       return buildTable("NPC Boundary Info", [
-        ["OBJECTID", feature.getProperty("OBJECTID")],
+        // ["OBJECTID", feature.getProperty("OBJECTID")],
         ["NPC_NAME", feature.getProperty("NPC_NAME")],
         ["DIVISION", feature.getProperty("DIVISION")],
         ["DIV", feature.getProperty("DIV")],
-        ["INC_CRC", feature.getProperty("INC_CRC")],
-        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
+        // ["INC_CRC", feature.getProperty("INC_CRC")],
+        // ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
 
@@ -811,21 +816,27 @@
     }
 
     function buildEstContent(feature) {
-      return buildTable("NPP Info", [
-        ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
+      const dept = feature.getProperty("DEPARTMENT") || "";
+      
+      let est = dept;
+      if (dept.includes("Neighbourhood Police Centre")) est = "NPC Info";
+      if (dept.includes("Neighbourhood Police Post")) est = "NPP Info";
+      
+      return buildTable(est, [
+        // ["OBJECTID_1", feature.getProperty("OBJECTID_1")],
         ["DEPARTMENT", feature.getProperty("DEPARTMENT")],
         ["TYPE", feature.getProperty("TYPE")],
         ["OPERATING_HOURS", feature.getProperty("OPERATING_HOURS")],
         ["TELEPHONE", feature.getProperty("TELEPHONE")],
         ["ALT_TELEPHONE_LINE", feature.getProperty("ALT_TELEPHONE_LINE")],
-        ["BUILDING_NAME", feature.getProperty("BUILDING_NAME")],
+        // ["BUILDING_NAME", feature.getProperty("BUILDING_NAME")],
         ["HSE_BLK_NO", feature.getProperty("HSE_BLK_NO")],
         ["UNIT", feature.getProperty("UNIT")],
         ["STREET_NAME", feature.getProperty("STREET_NAME")],
         ["POSTAL_CODE", feature.getProperty("POSTAL_CODE")],
-        ["FAX", feature.getProperty("FAX")],
-        ["INC_CRC", feature.getProperty("INC_CRC")],
-        ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
+        // ["FAX", feature.getProperty("FAX")],
+        // ["INC_CRC", feature.getProperty("INC_CRC")],
+        // ["FMEL_UPD_D", feature.getProperty("FMEL_UPD_D")]
       ]);
     }
 
