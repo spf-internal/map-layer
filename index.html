@@ -627,8 +627,8 @@
           filterContainer.innerHTML = `
             <b>Map Layers</b><br />
             <label><input type="checkbox" id="npcBoundaryToggle" checked /> NPC Boundaries</label><br />
-            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /> NPC Locations</label><br />
-            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /> NPP Locations</label>
+            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /><span class="color-box npc"></span> NPC Locations</label><br />
+            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /><span class="color-box npp"></span> NPP Locations</label>
           `;
 
           const npcBoundaryToggle = filterContainer.querySelector("#npcBoundaryToggle");
@@ -690,8 +690,8 @@
           
           filterContainer.innerHTML = `
             <b>Map Layer</b><br />
-            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /> NPC Locations</label><br />
-            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /> NPP Locations</label>
+            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /><span class="color-box npc"></span> NPC Locations</label><br />
+            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /><span class="color-box npp"></span> NPP Locations</label>
             <hr style="border:0; border-top:1px solid #eee; margin:10px 0;"/>
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                <b>Divisions</b>
