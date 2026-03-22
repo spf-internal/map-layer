@@ -357,7 +357,7 @@
     let clickedFeature = null;
     let clickedLayer = null;
     let isClickInfoWindowOpen = false;
-    let isNppClicked = false;
+    let isEstClicked = false;
     let tooltip;
     
     let legendDiv;
@@ -389,7 +389,7 @@
       
       clickInfoWindow.addListener("closeclick", () => {
         if (clickedFeature) {
-          if (isNppClicked) {
+          if (isEstClicked) {
             clickedLayer.overrideStyle(clickedFeature, {
               icon: buildEstablishmentIcon(clickedFeature)
             });
@@ -461,7 +461,7 @@
           layer.overrideStyle(clickedFeature, NPC_NORMAL_STYLE(clickedFeature));
         }
         
-        isNppClicked = false;
+        isEstClicked = false;
         clickedFeature = e.feature;
         clickedLayer = layer;
         layer.overrideStyle(e.feature, NPC_ACTIVE_STYLE(e.feature));
@@ -520,7 +520,7 @@
           });
         }
         
-        isNppClicked = true;
+        isEstClicked = true;
         clickedFeature = e.feature;
         clickedLayer = layer;
         layer.overrideStyle(e.feature, {
@@ -622,32 +622,37 @@
           filterContainer.innerHTML = `
             <b>Map Layers</b><br />
             <label><input type="checkbox" id="npcBoundaryToggle" checked /> NPC Boundaries</label><br />
-            <label><input type="checkbox" id="npcToggle" checked /> NPC Locations</label><br />
-            <label><input type="checkbox" id="nppToggle" checked /> NPP Locations</label>
+            <label><input type="checkbox" class="estCheck" id="npcToggle" value="neighbourhood police centre" checked /> NPC Locations</label><br />
+            <label><input type="checkbox" class="estCheck" id="nppToggle" value="neighbourhood police post" checked /> NPP Locations</label>
           `;
 
           const npcBoundaryToggle = filterContainer.querySelector("#npcBoundaryToggle");
           const npcToggle = filterContainer.querySelector("#npcToggle");
           const nppToggle = filterContainer.querySelector("#nppToggle");
-
+          const estChecks = filterContainer.querySelectorAll(".estCheck");
+          const updateEstVis = () => {
+            const activeEst = [...estChecks]
+              .filter(c => c.checked)
+              .map(c => c.value);
+            
+            estLayer.setStyle(feature => {
+              const department = feature.getProperty("DEPARTMENT").toLowerCase();
+              
+              if (!activeEst.some(est => department.includes(est))) {
+                return { visible: false };
+              }
+              
+              return {
+                icon: buildEstablishmentIcon(feature),
+                visible: true
+              };
+            });
+          };
+          
           npcBoundaryToggle.onchange = e => {
             npcLayer.setMap(e.target.checked ? map : null);
           };
-          // npcToggle.onchange = e => {
-          //   estLayer.setMap(visible ? map : null);
-          //   estLayer.setStyle(feature => {
-          //     const div = feature.getProperty("DIV");
-              
-          //     if (!activeDivisions.includes(div)) {
-          //       return { visible: false };
-          //     }
-              
-          //     return NPC_NORMAL_STYLE(feature);
-          //   });
-          // };
-          // nppToggle.onchange = e => {
-          //   estLayer.setMap(visible ? map : null);
-          // };
+          estChecks.forEach(cb => cb.onchange = updateEstVis);
         } 
         else if (mode === "division") {
           npcLayer.revertStyle();
@@ -683,7 +688,8 @@
             </div>
             <div class="division-list">${divisionHtml}</div>
           `;
-
+          
+          const npcToggle = filterContainer.querySelector("#npcToggle");
           const nppToggle = filterContainer.querySelector("#nppToggle");
           const checks = filterContainer.querySelectorAll(".divisionCheck");
           const selectAll = filterContainer.querySelector("#selAll");
