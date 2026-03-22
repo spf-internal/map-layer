@@ -744,12 +744,12 @@
           estChecks.forEach(cb => cb.onchange = updateEstVis);
           selectAll.onclick = e => {
             e.preventDefault();
-            checks.forEach(c => c.checked = true);
+            divisionChecks.forEach(c => c.checked = true);
             updateDivisionVis();
           };
           selectNone.onclick = e => {
             e.preventDefault();
-            checks.forEach(c => c.checked = false);
+            divisionChecks.forEach(c => c.checked = false);
             updateDivisionVis();
           };
           divisionChecks.forEach(cb => cb.onchange = updateDivisionVis);
