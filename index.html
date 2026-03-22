@@ -454,12 +454,6 @@
         });
       });
       
-      uniqueDivisions.sort((a, b) => {
-        if (a === "p") return 1;   // move "p" to the end
-        if (b === "p") return -1;  // keep other elements before "p"
-        return a.localeCompare(b); // normal sorting for the rest
-      });
-      
       layer.setStyle(NPC_NORMAL_STYLE);
       
       layer.addListener("click", e => {
@@ -660,19 +654,21 @@
           npcLayer.setStyle(NPC_NORMAL_STYLE);
           npcLayer.setMap(map);
           estLayer.setMap(map);
+
+          uniqueDivisions.sort((a, b) => {
+            if (a === "p") return 1;   // move "p" to the end
+            if (b === "p") return -1;  // keep other elements before "p"
+            return a.localeCompare(b); // normal sorting for the rest
+          });
           
           const divisionHtml = uniqueDivisions.map(d => {
             const color = stringToColor(d);
-            
-            if (d.toLowerCase() === "p") {
-              d = "Airport Police"
-            }
             
             return `
               <label style="display:block; margin-bottom:4px;">
                 <input type="checkbox" class="divisionCheck" value="${d}" checked />
                 <span class="division-color" style="background:${color}"></span>
-                ${d} Division
+                ${(d.toLowerCase() === "p") ? "Airport Police" : d} Division
               </label>
             `
           }).join("");
